@@ -498,10 +498,10 @@ void add_fc_weight_layer(
     int   	  output_shape_dim,
     const char*   output_name,
     const char*   layer_name,
-    int   	  num_input_neuron,
     const int*    weight_shape,
     int   	  weight_shape_dim,
     const char*   weight_name,
+    int       num_input_neuron, 
     const float*  bias,
     int   	  have_bias,
     int   	  weight_col_is_in_neruon_num
