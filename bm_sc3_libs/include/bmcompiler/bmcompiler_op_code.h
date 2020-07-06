@@ -41,6 +41,9 @@
 #define ACTIVE_FLOOR    12  //only for shape tensor
 #define ACTIVE_SIN      13
 #define ACTIVE_COS      14
-#define ACTIVE_IS_FINITE  15
+#define ACTIVE_IS_FINITE 15
+#define ACTIVE_MISH     16
+#define ACTIVE_SWISH    17  // only for fix8b currently
+#define ACTIVE_HSWISH   18  // only for fix9b currently
 
 #endif

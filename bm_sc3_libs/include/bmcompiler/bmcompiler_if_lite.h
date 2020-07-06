@@ -345,6 +345,93 @@ void bm_coeff_to_neuron(
         const char* input_name,
         const char* output_name
         );
+
+void bm_add_depth_to_space_v2(
+        void * handle,
+        const char* input_name,
+        const char* output_name,
+        const int* block_sizes,  // {h_block_size, w_block_size}
+        int in_is_nchw,          // 0: NHWC, 1: NCHW
+        int out_is_nchw,         // 0: NHWC, 1: NCHW
+        int is_inversed          // 0: depth2space, 1: space2depth
+        );
+
+void bm_add_depth_to_space(
+        void * handle,
+        const char* input_name,
+        const char* output_name,
+        const int* block_sizes,  // {h_block_size, w_block_size}
+        int is_nchw,             // 0: NHWC, 1: NCHW
+        int is_inversed          // 0: depth2space, 1: space2depth
+        );
+
+void bm_add_broadcast_like_layer(
+        void* handle,
+        const char* lhs_name,
+        const char* rhs_name,
+        const char* out_name,
+        const int* lhs_axis,
+        const int* rhs_axis,
+        int axes_num
+        );
+
+void bm_add_box_decode_layer(
+        void* handle,
+        const char* input_name,
+        const char* anchors_name,
+        const char* output_name,
+        const float* stds,  //length = 4
+        float clip,         // clip<0 means has no clip
+        int anchor_format  // 0-(xmin, ymin, xmax, ymax), 1-(xcenter, ycenter, width, height)
+        );
+
+void bm_add_split_tf_layer(
+        void* handle,
+        const char* in_name,
+        const char* const* out_names,
+        int out_num,
+        const int* split_sizes,
+        int split_num,
+        int split_axis
+        );
+
+void bm_add_concat_layer(
+        void* handle,
+        const char* const* in_names,
+        int in_num,
+        const char* out_name,
+        int concat_axis
+        );
+
+void bm_add_active_layer(
+        void* handle,
+        const char* in_name,
+        const char* out_name,
+        int active_op
+        );
+
+void bm_add_const_binary_layer(
+        void* handle,
+        const char* in_name,
+        const char* out_name,
+        float const_value,
+        int inversed,
+        int binary_op
+        );
+
+void bm_add_binary_layer(
+        void* handle,
+        const char* in0_name,
+        const char* in1_name,
+        const char* out_name,
+        int binary_op
+        );
+void bm_add_mish_activation(
+        void* handle,
+        const char* in_name,
+        const char* out_name
+        );
+
 #ifdef __cplusplus
 }
 #endif

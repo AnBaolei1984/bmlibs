@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-#define BM1682
-
 /**
  * \brief create bmcompiler pointer
  * \return bmcompiler pointer
@@ -362,6 +360,8 @@ void add_interp_layer_v2(
    const char*   output_name,
    int     pad_bag,
    int     pad_end,
+   int     align_corners,
+   int     half_pixel_centers,
    int     platform_sp
  );
 
@@ -501,7 +501,7 @@ void add_fc_weight_layer(
     const int*    weight_shape,
     int   	  weight_shape_dim,
     const char*   weight_name,
-    int       num_input_neuron, 
+    int           num_input_neuron,
     const float*  bias,
     int   	  have_bias,
     int   	  weight_col_is_in_neruon_num
@@ -817,6 +817,19 @@ void add_relu_layer(
   );
 
 void add_softmax_layer(
+    void* 	  p_bmcpl,
+    const int*    input_shape,
+    int   	  input_shape_dim,
+    const char*   input_name,
+    const int*    output_shape,
+    int   	  output_shape_dim,
+    const char*   output_name,
+    int   	  inner_num,
+    int   	  outer_num,
+    int   	  softmax_dim
+  );
+
+void add_log_softmax_layer(
     void* 	  p_bmcpl,
     const int*    input_shape,
     int   	  input_shape_dim,
@@ -1917,6 +1930,18 @@ void add_conv3d_layer(
     int   	  dw,
     int   	  have_bias
 );
+
+void add_unfold_layer(
+    void* 	  p_bmcpl,
+    const int    *input_shape,
+    int   	  input_shape_dim,
+    const char   *input_name,
+    const int    *output_shape,
+    int   	  output_shape_dim,
+    const char   *output_name,
+    int axis,
+    int size,
+    int step);
 
 
 #ifdef __cplusplus

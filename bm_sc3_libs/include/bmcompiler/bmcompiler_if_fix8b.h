@@ -981,6 +981,21 @@ void add_tf_split_layer_fix8b(
      int                in_sign,
      int                out_sign);
 
+void add_arith_shift_layer_fix8b(
+    void*              p_bmcpl,
+    const int*         input_shape,
+    int                input_shape_dim,
+    const char*        input_name,
+    const int*         output_shape,
+    int                output_shape_dim,
+    const char*        output_name,
+    const void *       shift_per_channel,
+    int                shiftType,
+    int                shift_num,
+    int                shift_mode,
+    int                in_type,
+    int                out_type);
+
 #ifdef __cplusplus
 }
 #endif
