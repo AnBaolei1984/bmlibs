@@ -6,6 +6,8 @@
 * \brief interface of bmcompiler
 */
 
+#define BM1682 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
