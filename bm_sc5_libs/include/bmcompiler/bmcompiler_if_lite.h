@@ -346,6 +346,16 @@ void bm_coeff_to_neuron(
         const char* output_name
         );
 
+void bm_add_depth_to_space_v2(
+        void * handle,
+        const char* input_name,
+        const char* output_name,
+        const int* block_sizes,  // {h_block_size, w_block_size}
+        int in_is_nchw,          // 0: NHWC, 1: NCHW
+        int out_is_nchw,         // 0: NHWC, 1: NCHW
+        int is_inversed          // 0: depth2space, 1: space2depth
+        );
+
 void bm_add_depth_to_space(
         void * handle,
         const char* input_name,
@@ -353,6 +363,16 @@ void bm_add_depth_to_space(
         const int* block_sizes,  // {h_block_size, w_block_size}
         int is_nchw,             // 0: NHWC, 1: NCHW
         int is_inversed          // 0: depth2space, 1: space2depth
+        );
+
+void bm_add_broadcast_like_layer(
+        void* handle,
+        const char* lhs_name,
+        const char* rhs_name,
+        const char* out_name,
+        const int* lhs_axis,
+        const int* rhs_axis,
+        int axes_num
         );
 
 void bm_add_box_decode_layer(

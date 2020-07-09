@@ -39,9 +39,24 @@ typedef enum {
     CPU_UNARY                     = 23, /* CPU UNARY LAYER */
     CPU_EMBEDDING                 = 24, /* CPU EMBEDDING */
     CPU_TOPK_MX                   = 25, /* TOPK from MXNET*/
+    CPU_INDEX_PUT                 = 26, /* CPU INDEX PUT */
     CPU_LAYER_NUM,
-    CPU_LAYER_UNKNOW = CPU_LAYER_NUM
+    CPU_LAYER_UNKNOW = CPU_LAYER_NUM,
+    CPU_DEBUG                     = 88888, /* CPU DEBUG by dump tensor*/
 } CPU_LAYER_TYPE_T;
+
+//must be the same as bmcompiler
+typedef enum {
+  CPU_DTYPE_FP32 = 0,
+  CPU_DTYPE_FP16 = 1,
+  CPU_DTYPE_INT8 = 2,
+  CPU_DTYPE_UINT8 = 3,
+  CPU_DTYPE_INT16 = 4,
+  CPU_DTYPE_UINT16 = 5,
+  CPU_DTYPE_INT32 = 6,
+  CPU_DTYPE_UINT32 = 7,
+  CPU_DTYPE_UNKNOWN = -1,
+} CPU_DATA_TYPE_T;
 
 typedef struct cpu_exp_param
 {
@@ -136,8 +151,10 @@ typedef struct tag_cpu_yolo_param
 } cpu_yolo_param_t;
 
 typedef enum {
-    METHOD_BILINEAR     = 0,    /* bilinear */
-    METHOD_NEAREST      = 1     /* nearest */
+    METHOD_BILINEAR         = 0,    /* bilinear */
+    METHOD_NEAREST          = 1,     /* nearest */
+    METHOD_BILINEAR_PYTORCH = 2,
+    METHOD_NEAREST_PYTORCH  = 3
 } RESIZE_METHOD_T;
 
 typedef struct cpu_crop_and_resize {
@@ -185,10 +202,12 @@ typedef struct cpu_topk_param {
       k      = -1;
       axis   = -1;
       sorted = true;
+      descending = true;
     }
     int  k;
     int  axis;
     bool sorted;
+    bool descending;
 }cpu_topk_param_t;
 
 #define MX_TOPK_RET_INDICES 0
@@ -248,6 +267,17 @@ typedef struct cpu_embedding_param
 typedef struct cpu_gathernd {
     int indice_is_int = 0;
 } cpu_gathernd_t;
+
+typedef struct cpu_index_put_param {
+    int mode;
+} cpu_index_put_param_t;
+
+typedef struct cpu_debug_param {
+    int tensor_id;
+    int tensor_dtype;
+    int from_layer_id;
+    int from_layer_type;
+} cpu_debug_param_t;
 
 //} /* namespace bmcpu */
 #endif /* _CPU_COMMON_H_ */

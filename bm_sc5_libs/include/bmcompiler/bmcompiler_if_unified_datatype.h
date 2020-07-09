@@ -250,7 +250,8 @@ void add_topk_layer_unified(
     const  DataInfo value_data,
     const  DataInfo index_data,
     int    k,
-    int    dim);
+    int    dim,
+    bool   descending = true);
 
 
 void add_stridecal_layer_unified(
