@@ -19,6 +19,9 @@ typedef enum {
 } bm_data_type_t;
 typedef bm_data_type_t DATA_TYPE_T;
 
+//using fp32 as bool
+#define DTYPE_BOOL DTYPE_FP32
+
 typedef enum {
     LAYER_FORMAT_NCHW = 0,
     LAYER_FORMAT_NHWC = 1

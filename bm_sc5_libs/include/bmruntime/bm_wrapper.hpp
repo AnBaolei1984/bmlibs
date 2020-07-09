@@ -22,23 +22,21 @@
  * @brief   Convert opencv a Mat object to a BMCV bm_image object
  * @ingroup bmruntime
  *
- * @param [in]     bm_handle   the low level device handle
- * @param [in]     in          a read-only OPENCV mat object
- * @param [out]    out         an uninitialized BMCV bm_image object
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           bm_handle   the low level device handle
+ * @param [in]           in          a read-only OPENCV mat object
+ * @param [out]          out         an uninitialized BMCV bm_image object
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
 
-static inline bool bm_image_from_mat (bm_handle_t       &bm_handle,
+static inline bm_status_t bm_image_from_mat (bm_handle_t       &bm_handle,
                                       cv::Mat           &in,
                                       bm_image          &out) {
   bm_status_t ret =  cv::bmcv::toBMI(in, &out, false);
-  if (ret == BM_SUCCESS) {
-    return true;
-  } else {
+  if (ret != BM_SUCCESS) {
     std::cout << "Error! bm_image_from_mat: " << ret << std::endl;
-    return false;
   }
+  return ret;
 }
 
 /**
@@ -46,20 +44,20 @@ static inline bool bm_image_from_mat (bm_handle_t       &bm_handle,
  * @brief   Convert opencv Mat object to BMCV bm_image object
  * @ingroup bmruntime
  *
- * @param [in]     bm_handle   the low level device handle
- * @param [in]     in          a read-only OPENCV mat vector
- * @param [out]    out         an uninitialized BMCV bm_image vector
- * @retval true    change success.
- * @retval false   chaneg failed.
+ * @param [in]           bm_handle   the low level device handle
+ * @param [in]           in          a read-only OPENCV mat vector
+ * @param [out]          out         an uninitialized BMCV bm_image vector
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_from_mat (bm_handle_t                &bm_handle,
-                                      std::vector<cv::Mat>       &in,
-				      std::vector<bm_image>      &out) {
+static inline bm_status_t bm_image_from_mat (bm_handle_t           &bm_handle,
+                                             std::vector<cv::Mat>  &in,
+				                                     std::vector<bm_image> &out) {
 
   /* sanity check */
   if (in.empty()) {
     std::cout << "bm_image_from_mat: input empty!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   if (out.empty()) {
@@ -73,7 +71,7 @@ static inline bool bm_image_from_mat (bm_handle_t                &bm_handle,
     out.push_back (tmp);
   }
 
-  return true;
+  return BM_SUCCESS       ;
 }
 
 #endif // USE_OPENCV
@@ -88,22 +86,22 @@ static inline bool bm_image_from_mat (bm_handle_t                &bm_handle,
  * @brief   Convert ffmpeg a avframe object to a BMCV bm_image object
  * @ingroup bmruntime
  *
- * @param [in]     bm_handle   the low level device handle
- * @param [in]     in          a read-only avframe
- * @param [out]    out         an uninitialized BMCV bm_image object.
-                   if avframe is compressed format,you need use
-                   bm_image_destroy function to free out parameter until you
-                   no longer useing it.
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           bm_handle   the low level device handle
+ * @param [in]           in          a read-only avframe
+ * @param [out]          out         an uninitialized BMCV bm_image object.
+                         if avframe is compressed format,you need use
+                         bm_image_destroy function to free out parameter until you
+                         no longer useing it.
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
 
-static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
-                                        AVFrame           &in,
-                                        bm_image          &out) {
+static inline bm_status_t bm_image_from_frame (bm_handle_t       &bm_handle,
+                                               AVFrame           &in,
+                                               bm_image          &out) {
   if (in.format != AV_PIX_FMT_NV12) {
     std::cout << "format donot support" << std::endl;
-    return false;
+    return BM_NOT_SUPPORTED;
   }
 
   if (in.channel_layout == 101) { /* COMPRESSED NV12 FORMAT */
@@ -112,7 +110,7 @@ static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
 	(0 == in.linesize[4]) || (0 == in.linesize[5]) || (0 == in.linesize[6]) || (0 == in.linesize[7]) || \
 	(0 == in.data[4]) || (0 == in.data[5]) || (0 == in.data[6]) || (0 == in.data[7])) {
       std::cout << "bm_image_from_frame: get yuv failed!!" << std::endl;
-      return false;
+      return BM_ERR_PARAM;
     }
     bm_image cmp_bmimg;
     bm_image_create (bm_handle,
@@ -141,7 +139,7 @@ static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
 		   DATA_TYPE_EXT_1N_BYTE,
 		   &out);
 
-    bm_image_dev_mem_alloc(out, BMCV_HEAP1_ID);
+    bm_image_dev_mem_alloc(out);
     bmcv_rect_t crop_rect = {0, 0, in.width, in.height};
     bmcv_image_vpp_convert(bm_handle, 1, cmp_bmimg, &out, &crop_rect);
   } else { /* UNCOMPRESSED NV12 FORMAT */
@@ -150,7 +148,7 @@ static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
 	(0 == in.linesize[4]) || (0 == in.linesize[5]) || \
 	(0 == in.data[4]) || (0 == in.data[5])) {
       std::cout << "bm_image_from_frame: get yuv failed!!" << std::endl;
-      return false;
+      return BM_ERR_PARAM;
     }
 
     /* create bm_image with YUV-nv12 format */
@@ -176,7 +174,7 @@ static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
     bm_image_attach(out, input_addr);
   }
 
-  return true;
+  return BM_SUCCESS;
 }
 
 /**
@@ -184,20 +182,20 @@ static inline bool bm_image_from_frame (bm_handle_t       &bm_handle,
  * @brief   Convert ffmpeg avframe  to BMCV bm_image object
  * @ingroup bmruntime
  *
- * @param [in]     bm_handle   the low level device handle
- * @param [in]     in          a read-only ffmpeg avframe vector
- * @param [out]    out         an uninitialized BMCV bm_image vector
- * @retval true    change success.
- * @retval false   chaneg failed.
+ * @param [in]           bm_handle   the low level device handle
+ * @param [in]           in          a read-only ffmpeg avframe vector
+ * @param [out]          out         an uninitialized BMCV bm_image vector
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_from_frame (bm_handle_t                &bm_handle,
-                                        std::vector<AVFrame>       &in,
-                                        std::vector<bm_image>      &out) {
+static inline bm_status_t bm_image_from_frame (bm_handle_t           &bm_handle,
+                                               std::vector<AVFrame>  &in,
+                                               std::vector<bm_image> &out) {
 
   /* sanity check */
   if (in.empty()) {
     std::cout << "bm_image_from_mat: input empty!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   if (out.empty()) {
@@ -211,7 +209,7 @@ static inline bool bm_image_from_frame (bm_handle_t                &bm_handle,
     out.push_back (tmp);
   }
 
-  return true;
+  return BM_SUCCESS;
 }
 
 #endif // USE_FFMPEG
@@ -221,18 +219,18 @@ static inline bool bm_image_from_frame (bm_handle_t                &bm_handle,
  * @brief   Copy a malloc() buffer to BMCV bm_image object
  * @ingroup bmruntime
  *
- * @param [in]     in          input buffer 
- * @param [in]     size        input buffer size which must be equal to bm_image's size
- * @param [out]    out         an BMCV bm_image object initialized with bm_image_create()
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           in          input buffer
+ * @param [in]           size        input buffer size which must be equal to bm_image's size
+ * @param [out]          out         an BMCV bm_image object initialized with bm_image_create()
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_copy_buffer (void *in, int size, bm_image &out) {
+static inline bm_status_t bm_image_copy_buffer (void *in, int size, bm_image &out) {
 
   /* sanity check */
   if (NULL == in) {
     std::cout << "bm_image_copy_buffer: input is NULL!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   /* get bm_image size */
@@ -241,23 +239,23 @@ static inline bool bm_image_copy_buffer (void *in, int size, bm_image &out) {
   res = bm_image_get_byte_size (out , &length);
   if (BM_SUCCESS != res) {
     std::cout << "bm_image_copy_buffer: get bm_image size failed!!" << std::endl;
-    return false;
+    return res;
   }
 
   /* input buffer size must be equal to bm_image's size */
   if (size != length) {
     std::cout << "bm_image_copy_buffer: input size match bm_image failed!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   /* copy memory from system to device */
   res = bm_image_copy_host_to_device (out, &in);
   if (BM_SUCCESS != res) {
     std::cout << "bm_image_copy_buffer: copy data to bm_image failed!!" << std::endl;
-    return false;
+    return res;
   }
 
-  return true;
+  return BM_SUCCESS;
 }
 
 /**
@@ -265,32 +263,32 @@ static inline bool bm_image_copy_buffer (void *in, int size, bm_image &out) {
  * @brief   Copy malloc buffers to BMCV bm_image objects
  * @ingroup bmruntime
  *
- * @param [in]     in          an input buffer vector
- * @param [in]     size        an input buffer size vector
- * @param [out]    out         an initialized BMCV bm_image object vector
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           in          an input buffer vector
+ * @param [in]           size        an input buffer size vector
+ * @param [out]          out         an initialized BMCV bm_image object vector
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_copy_buffer (const std::vector<void *> &in,
+static inline bm_status_t bm_image_copy_buffer (const std::vector<void *> &in,
                                          const std::vector<int>    &size,
                                          std::vector<bm_image>     &out) {
 
   /* sanity check */
   if ((in.size() != size.size()) || (in.size() != out.size())) {
     std::cout << "bm_image_copy_buffer: inputs size match failed!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   /* copy buffer to bm_image one by one */
   for (size_t i = 0; i < in.size(); i++) {
-    bool res = bm_image_copy_buffer (in[i], size[i], out[i]);
+    bm_status_t res = bm_image_copy_buffer (in[i], size[i], out[i]);
     if (!res) {
       std::cout << "bm_image_copy_buffer: change the buffer " << " i " << "failed!!" << std::endl;
-      return false;
+      return res;
     }
   }
 
-  return true;
+  return BM_SUCCESS;
 }
 
 /**
@@ -298,23 +296,23 @@ static inline bool bm_image_copy_buffer (const std::vector<void *> &in,
  * @brief   create bm images with continuous device memory
  * @ingroup bmruntime
  *
- * @param [in]     handle       handle of low level device
- * @param [in]     img_h        image height
- * @param [in]     img_w        image width
- * @param [in]     img_format   format of image: BGR or YUV
- * @param [in]     data_type    data type of image: INT8 or FP32
- * @param [out]    image        pointer of bm image object
- * @param [in]     batch_num    batch size
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           handle       handle of low level device
+ * @param [in]           img_h        image height
+ * @param [in]           img_w        image width
+ * @param [in]           img_format   format of image: BGR or YUV
+ * @param [in]           data_type    data type of image: INT8 or FP32
+ * @param [out]          image        pointer of bm image object
+ * @param [in]           batch_num    batch size
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_create_batch (bm_handle_t              handle,
-                                          int                      img_h,
-                                          int                      img_w,
-                                          bm_image_format_ext      img_format,
-                                          bm_image_data_format_ext data_type,
-                                          bm_image                 *image,
-                                          int                      batch_num) {
+static inline bm_status_t bm_image_create_batch (bm_handle_t              handle,
+                                                 int                      img_h,
+                                                 int                      img_w,
+                                                 bm_image_format_ext      img_format,
+                                                 bm_image_data_format_ext data_type,
+                                                 bm_image                 *image,
+                                                 int                      batch_num) {
 
   // init images
   for (int i = 0; i < batch_num; i++) {
@@ -323,7 +321,7 @@ static inline bool bm_image_create_batch (bm_handle_t              handle,
 
   // alloc continuous memory for multi-batch
   bm_image_alloc_contiguous_mem (batch_num, image);
-  return true;
+  return BM_SUCCESS;
 }
 
 /**
@@ -331,12 +329,12 @@ static inline bool bm_image_create_batch (bm_handle_t              handle,
  * @brief   destroy bm images with continuous device memory
  * @ingroup bmruntime
  *
- * @param [in]     image        pointer of bm image object
- * @param [in]     batch_num    batch size
- * @retval true    change success.
- * @retval false   change failed.
+ * @param [in]           image        pointer of bm image object
+ * @param [in]           batch_num    batch size
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_destroy_batch (bm_image *image, int batch_num) {
+static inline bm_status_t bm_image_destroy_batch (bm_image *image, int batch_num) {
 
   // free memory
   bm_image_free_contiguous_mem (batch_num, image);
@@ -346,7 +344,7 @@ static inline bool bm_image_destroy_batch (bm_image *image, int batch_num) {
     bm_image_destroy (image[i]);
   }
 
-  return true;
+  return BM_SUCCESS;
 }
 
 /**
@@ -354,7 +352,7 @@ static inline bool bm_image_destroy_batch (bm_image *image, int batch_num) {
  * @brief   a inference wrapper call supporting multi-input & multi-output
  * @ingroup bmruntime
  *
- * @param [in]    p_bmrt         the pointer of contxt 
+ * @param [in]    p_bmrt         the pointer of contxt
  * @param [in]    inputs         a vector of bm_images containing multi-input data
  * @param [out]   outputs        a vector of output buffer pointers
  * @param [in]    input_shapes   a vector of input shapes
@@ -461,7 +459,7 @@ static inline bool bm_inference (void                      *p_bmrt,
     bm_free_device (bm_handle, output_tensors[i].device_mem);
   }
 
-  return true;  
+  return true;
 }
 
 /**
@@ -469,7 +467,7 @@ static inline bool bm_inference (void                      *p_bmrt,
  * @brief   a inference wrapper call supporting single-input & single-output
  * @ingroup bmruntime
  *
- * @param [in]    p_bmrt         the pointer of contxt 
+ * @param [in]    p_bmrt         the pointer of contxt
  * @param [in]    input          a pointer of bm_image containing input data
  * @param [out]   output         a pointer of output buffer
  * @param [in]    input_shape    input shape
@@ -510,7 +508,7 @@ static inline bool bm_inference (void         *p_bmrt,
  * @brief   a inference wrapper call supporting single-input & multi-output
  * @ingroup bmruntime
  *
- * @param [in]    p_bmrt         the pointer of contxt 
+ * @param [in]    p_bmrt         the pointer of contxt
  * @param [in]    input          a pointer of bm_image containing input data
  * @param [out]   outputs        a vector of output buffer pointers
  * @param [in]    input_shape    input shape
@@ -548,36 +546,36 @@ static inline bool bm_inference (void                  *p_bmrt,
  * @brief   Convert BMCV bm_image memory to bin
  * @ingroup bmcv
  *
- * @param [in]     in            bm_image object
- * @param [out]    output_name   a save file name ,if not exit would build it , if exit would clear it
- * @retval true    change success.
- * @retval false   chaneg failed.
+ * @param [in]           in            bm_image object
+ * @param [out]          output_name   a save file name ,if not exit would build it , if exit would clear it
+ * @retval BM_SUCCESS    change success.
+ * @retval other values  change failed.
  */
-static inline bool bm_image_dumpdata (bm_image &in ,
+static inline bm_status_t bm_image_dumpdata (bm_image &in ,
                                       const char *output_name) {
 
   /* sanity check */
   if (NULL == output_name) {
     std::cout << "bm_image_dumpdata: OUT file name err!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
   if ((0 == in.width) || (0 == in.height)) {
     std::cout << "input image err!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   int size = 0;
   bm_status_t ret = bm_image_get_byte_size (in , &size);
   if (ret != BM_SUCCESS) {
     std::cout << "get image size err!!" << std::endl;
-    return false;
+    return ret;
   }
 
   unsigned char *data;
   data = new unsigned char[size];
   if (NULL == data) {
     std::cout << "malloc memory failed!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
   memset (data , 0, size);
 
@@ -585,13 +583,13 @@ static inline bool bm_image_dumpdata (bm_image &in ,
   fp = fopen (output_name , "wb+");
   if (NULL == fp) {
     std::cout << "open file failed!!" << std::endl;
-    return false;
+    return BM_ERR_PARAM;
   }
 
   ret = bm_image_copy_device_to_host (in , (void**)&data);
   if (ret != BM_SUCCESS) {
     std::cout << "copy device data err!!" << std::endl;
-    return false;
+    return ret;
   }
 
   fwrite (data , size , 1 , fp);
@@ -599,7 +597,7 @@ static inline bool bm_image_dumpdata (bm_image &in ,
   delete (data);
   fclose (fp);
 
-  return true;
+  return BM_SUCCESS;
 }
 
 #endif // _BM_WRAPPER_HPP_

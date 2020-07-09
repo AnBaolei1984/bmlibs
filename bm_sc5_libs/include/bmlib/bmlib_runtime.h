@@ -1259,6 +1259,25 @@ bm_status_t bm_get_log(bm_handle_t handle, int process_handle, char *log_file, i
  */
 bm_status_t bm_sync_cpu_time(bm_handle_t handle);
 
+/*******************trace and profile releated functions **********************/
+typedef struct bm_dev_stat {
+  int mem_total;
+  int mem_used;
+  int tpu_util;
+} bm_dev_stat_t;
+
+/**
+ * @name    bm_get_stat
+ * @brief   To get the stat data at the moment
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [out] profile The result stat data
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_stat(bm_handle_t handle, bm_dev_stat_t *stat);
+
 #if defined(__cplusplus)
 }
 #endif

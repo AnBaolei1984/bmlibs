@@ -50,6 +50,11 @@ typedef struct bm_shape_s {
   int dims[BM_MAX_DIMS_NUM];
 } bm_shape_t;
 
+typedef struct bm_shape_ex_s {
+  bm_shape_t shape;
+  int        elem_num;
+} bm_shape_ex_t;
+
 /*
 bm_tensor_t holds a multi-dimensional array of elements of a single data type
 and tensor are in device memory */

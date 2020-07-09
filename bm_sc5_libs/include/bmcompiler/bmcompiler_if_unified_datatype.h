@@ -17,7 +17,7 @@ typedef struct DataInfo{
     int      scale;
     int      rshift_num;
     DATA_TYPE_T data_type;
-}DataInfo;
+} DataInfo;
 
 typedef struct BmConvParam {
     char*  layer_name;
@@ -36,14 +36,22 @@ typedef struct BmConvParam {
     bool   use_winograd;
     float  scale;
     int    mode;
+    BmQuantizeInfo quantize_info;
 } BmConvParam;
 
 typedef struct BmFcParam {
   int has_bias;
   int weight_col_is_in_neruon_num;
-  int mode;
+  int mode; //0: LowPrecision, 1: HighPrecisionSymmtric, 2: HighPrecisionAsymmetric
   BmQuantizeInfo quantize_info;
 } BmFcParam;
+
+typedef struct BmShapeFetchParam {
+  int begin_axis;
+  int end_axis;
+  int step;
+} BmShapeFetchParam;
+
 
 void add_select_layer_unified(
     void*   p_bmcpl,
@@ -322,8 +330,8 @@ void add_masked_select_layer_unified(
 void add_sort_layer_unified(
     void* p_bmcpl,
     const DataInfo in_data,
-    const DataInfo out_data,
     const DataInfo index_data,
+    const DataInfo out_data,
     int   dim = -1,
     bool  stable = false,
     bool  descending = false,
@@ -333,7 +341,7 @@ void add_sort_layer_unified(
 void add_argsort_layer_unified(
     void* p_bmcpl,
     const DataInfo in_data,
-    const DataInfo out_data,
+    const DataInfo index_data,
     int   dim = -1,
     bool  stable = false,
     bool  descending = false
@@ -366,6 +374,36 @@ void add_const_data_layer_unified(
     void* p_bmcpl,
     const DataInfo in_data);
 
+void add_shape_fetch_layer_unified(
+    void* p_bmcpl,
+    const DataInfo in_data,
+    const DataInfo out_data,
+    const BmShapeFetchParam &param);
+
+void add_where_layer_unified(
+    void* p_bmcpl,
+    const DataInfo in_data,
+    const DataInfo out_data);
+
+void add_expand_dims_layer_unified(
+    void* p_bmcpl,
+    const DataInfo in_data,
+    const DataInfo out_data,
+    int axis, int ndims);
+
+void add_space_to_batch_layer_unified(
+  void*          p_bmcpl,
+  const DataInfo in_data,
+  const DataInfo out_data,
+  const int*  block_sizes,
+  const int*  pad_sizes);
+
+void add_batch_to_space_layer_unified(
+  void*          p_bmcpl,
+  const DataInfo in_data,
+  const DataInfo out_data,
+  const int*  block_sizes,
+  const int*  crop_sizes);
 
 #ifdef __cplusplus
 }

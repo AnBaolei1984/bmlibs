@@ -131,6 +131,34 @@ typedef struct bm_image_format_info {
     bool                     default_stride;
 } bm_image_format_info_t;
 
+typedef struct {
+    int csc_coe00;
+    int csc_coe01;
+    int csc_coe02;
+    int csc_add0;
+    int csc_coe10;
+    int csc_coe11;
+    int csc_coe12;
+    int csc_add1;
+    int csc_coe20;
+    int csc_coe21;
+    int csc_coe22;
+    int csc_add2;
+} __attribute__((packed)) csc_matrix_t;
+
+typedef enum csc_type {
+    CSC_YCbCr2RGB_BT601 = 0,
+    CSC_YPbPr2RGB_BT601,
+    CSC_RGB2YCbCr_BT601,
+    CSC_YCbCr2RGB_BT709,
+    CSC_RGB2YCbCr_BT709,
+    CSC_RGB2YPbPr_BT601,
+    CSC_YPbPr2RGB_BT709,
+    CSC_RGB2YPbPr_BT709,
+    CSC_USER_DEFINED_MATRIX = 1000,
+    CSC_MAX_ENUM
+} csc_type_t;
+
 const char *bm_get_bmcv_version();
 
 /** bm_image_create
@@ -235,6 +263,12 @@ bm_status_t bmcv_image_storage_convert(bm_handle_t handle,
                                        int         image_num,
                                        bm_image *  input,
                                        bm_image *  output);
+
+bm_status_t bmcv_image_storage_convert_with_csctype(bm_handle_t handle,
+                                                    int         image_num,
+                                                    bm_image *  input,
+                                                    bm_image *  output,
+                                                    csc_type_t  csc_type);
 
 bm_status_t bmcv_image_copy_to(bm_handle_t         handle,
                                bmcv_copy_to_atrr_t copy_to_attr,
@@ -424,41 +458,14 @@ bm_status_t bmcv_image_vpp_convert(
     bmcv_rect_t *         crop_rect = NULL,
     bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR);
 
-typedef struct {
-    int csc_coe00;
-    int csc_coe01;
-    int csc_coe02;
-    int csc_add0;
-    int csc_coe10;
-    int csc_coe11;
-    int csc_coe12;
-    int csc_add1;
-    int csc_coe20;
-    int csc_coe21;
-    int csc_coe22;
-    int csc_add2;
-} __attribute__((packed)) csc_matrix_t;
-
-typedef enum csc_type {
-    CSC_YCbCr2RGB_BT601 = 0,
-    CSC_YPbPr2RGB_BT601,
-    CSC_RGB2YCbCr_BT601,
-    CSC_YCbCr2RGB_BT709,
-    CSC_RGB2YCbCr_BT709,
-    CSC_RGB2YPbPr_BT601,
-    CSC_YPbPr2RGB_BT709,
-    CSC_RGB2YPbPr_BT709,
-    CSC_USER_DEFINED_MATRIX = 1000,
-    CSC_MAX_ENUM
-} csc_type_t;
-
 bm_status_t bmcv_image_vpp_csc_matrix_convert(bm_handle_t           handle,
                                               int                   output_num,
                                               bm_image              input,
                                               bm_image *            output,
                                               csc_type_t            csc,
                                               csc_matrix_t *        matrix = nullptr,
-                                              bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR);
+                                              bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR,
+                                              bmcv_rect_t *         crop_rect = NULL);
 #endif
 
 /**

@@ -7,8 +7,9 @@
  * We must follow the rules:
  *   1. Positions and numbers in CPU_LAYER_TYPE_T cannot be modified!
  *   2. New element for CPU_LAYER_TYPE_T must be added to the last!
- *   3. Each cpu layer param must be defined carefully and cannot
- *      be revised after release.
+ *   3. After release, element in each cpu layer param cannot be deleted!
+ *   4. New elements for each cpu layer param must be added to the last!
+ *      And cpu layer coding must considers compatibility!
  */
 
 typedef enum {

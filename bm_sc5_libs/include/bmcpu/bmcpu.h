@@ -35,6 +35,7 @@ void bmcpu_uninit(void* bmcpu_handle);
  * @param   [in]    bmcpu_handle   The pointer of cpu handler.
  * @param   [in]    op_type        The type of the cpu op that is defined in CPU_LAYER_TYPE.
  * @param   [in]    param          The pointer of the cpu op parameter.
+ * @param   [in]    param_size     The byte size of the parameter.
  * @param   [in]    input_tensors  The data pointer of each inpyyut tensor.
  * @param   [in]    input_shapes   The shape of each input tensor.
  * @param   [in]    output_tensors The data pointer of each output tensor.
@@ -43,7 +44,8 @@ void bmcpu_uninit(void* bmcpu_handle);
  * @retval  0      success
  * @retval  other  fail
  */
-int  bmcpu_process(void* bmcpu_handle, int op_type, void *param,
+int  bmcpu_process(void* bmcpu_handle, int op_type,
+                   void *param, int param_size,
                    const vector<float *>& input_tensors,
                    const vector<vector<int>>& input_shapes,
                    const vector<float *>& output_tensors,
@@ -66,13 +68,15 @@ int  bmcpu_user_process(void* bmcpu_handle, void *param,
  * @param   [in]    bmcpu_handle   The pointer of cpu handler.
  * @param   [in]    op_type        The type of the cpu op that is defined in CPU_LAYER_TYPE.
  * @param   [in]    param          The pointer of the cpu op parameter.
+ * @param   [in]    param_size     The byte size of the parameter.
  * @param   [in]    input_shapes   The shape of each input tensor.
  * @param   [in]    output_shapes  The shape of each output tensor.
  *
  * @retval  0      success
  * @retval  other  fail
  */
-int  bmcpu_reshape(void* bmcpu_handle, int op_type, void *param,
+int  bmcpu_reshape(void* bmcpu_handle, int op_type,
+                   void *param, int param_size,
                    const vector<vector<int>>& input_shapes,
                    vector<vector<int>>& output_shapes
                    );
@@ -81,6 +85,28 @@ int  bmcpu_user_reshape(void* bmcpu_handle, void *param,
                         const vector<vector<int>>& input_shapes,
                         vector<vector<int>>& output_shapes
                         );
+
+/**
+ * @name    bmcpu_dtype
+ * @brief   get output dtypes with given input dtypes
+ *
+ * The interface will call to get output dtypes with given input dtypes
+ *
+ * @param   [in]    bmcpu_handle   The pointer of cpu handler.
+ * @param   [in]    op_type        The type of the cpu op that is defined in CPU_LAYER_TYPE.
+ * @param   [in]    input_dtypes   The dtype of each input tensor.
+ * @param   [in]    output_dtypes  The dtype of each output tensor.
+ *
+ * @retval  0      success
+ * @retval  other  fail
+ */
+int  bmcpu_dtype(void* bmcpu_handle, int op_type,
+                 const vector<int> &input_dtypes,
+                 vector<int> &output_dtypes);
+int  bmcpu_user_dtype(void* bmcpu_handle,
+                      const vector<int> &input_dtypes,
+                      vector<int> &output_dtypes);
+
 
 #if defined (__cplusplus)
 }

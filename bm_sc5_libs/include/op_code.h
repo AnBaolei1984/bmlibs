@@ -216,6 +216,7 @@ typedef enum {
 #define BINARY_NE 10006
 #define BINARY_SQUARED_DIFF 10007
 #define BINARY_FLOOR_MOD 10008
+#define BINARY_FLOOR_DIV 10009
 
 #define ACTIVE_ROUND    10  //only for float shape tensor
 #define ACTIVE_CEIL     11  //only for float shape tensor

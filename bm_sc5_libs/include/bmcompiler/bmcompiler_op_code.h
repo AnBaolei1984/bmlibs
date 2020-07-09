@@ -41,6 +41,7 @@
 #define ACTIVE_FLOOR    12  //only for shape tensor
 #define ACTIVE_SIN      13
 #define ACTIVE_COS      14
-#define ACTIVE_IS_FINITE  15
+#define ACTIVE_IS_FINITE 15
+#define ACTIVE_MISH     16
 
 #endif
