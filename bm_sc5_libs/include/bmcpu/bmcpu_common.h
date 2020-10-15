@@ -40,6 +40,10 @@ typedef enum {
     CPU_EMBEDDING                 = 24, /* CPU EMBEDDING */
     CPU_TOPK_MX                   = 25, /* TOPK from MXNET*/
     CPU_INDEX_PUT                 = 26, /* CPU INDEX PUT */
+    CPU_SCATTER_ND                = 27, /* CPU SCATTER ND */
+    CPU_RANDOM_UNIFORM            = 28, /* CPU RANDOM UNIFORM */
+    CPU_GATHER_PT                 = 29, /* CPU GATHER FOR PYTORCH */
+    CPU_BINARY                    = 30, /* CPU BINARY: MOD, DIV, ... */
     CPU_LAYER_NUM,
     CPU_LAYER_UNKNOW = CPU_LAYER_NUM,
     CPU_DEBUG                     = 88888, /* CPU DEBUG by dump tensor*/
@@ -253,11 +257,27 @@ typedef enum {
     OP_SIN        = 0,    /* sin */
     OP_COS        = 1,    /* cos */
     OP_ISFINITE   = 2,    /* isfinite */
+    OP_CEIL       = 3,
+    OP_FLOOR      = 4,
+    OP_ROUND      = 5,
 } UNARY_OP_CODE_T;
+
 typedef struct cpu_unary_param
 {
     UNARY_OP_CODE_T unary_op;
 } cpu_unary_param_t;
+
+typedef enum {
+    OP_UNKNOWN   = -1,
+    OP_MOD       = 0, // a%b
+    OP_DIV       = 1,  // a/b
+} BINARY_OP_CODE_T;
+
+typedef struct
+{
+    BINARY_OP_CODE_T op;
+    CPU_DATA_TYPE_T dtype;
+} cpu_binary_param_t;
 
 typedef struct cpu_embedding_param
 {
@@ -278,6 +298,19 @@ typedef struct cpu_debug_param {
     int from_layer_id;
     int from_layer_type;
 } cpu_debug_param_t;
+
+typedef struct cpu_scatter_nd_param {
+    int dim;
+    int shape[8];
+} cpu_scatter_nd_param_t;
+
+typedef struct cpu_random_uniform_param {
+    int dim;
+    int shape[8];
+    float lower;
+    float upper;
+    long long seed;
+} cpu_random_uniform_param_t;
 
 //} /* namespace bmcpu */
 #endif /* _CPU_COMMON_H_ */

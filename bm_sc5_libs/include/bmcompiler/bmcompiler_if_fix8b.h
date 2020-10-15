@@ -84,6 +84,17 @@ void add_reshape_layer_fix8b(
     int                data_sign
   );
 
+void add_reshape_layer_fix8b_v2(
+    void*        p_bmcpl,
+    const char*  input_name,
+    const int*   input_shape,
+    int          input_dim,
+    const char*  output_name,
+    const int*   new_shape,
+    int          new_dim,
+    int          data_sign
+  );
+
 void add_active_layer_fix8b_gdma(
     void*   p_bmcpl,
     int*    input_shape,
@@ -412,10 +423,8 @@ void add_interp_layer_fix8b(
     const char*   output_name,
     int   	  pad_bag,
     int   	  pad_end,
-    int       sign,
-    unsigned char *coeff[],
-    int   	  platform_sp //0:for caffeinterface 1:for tensorflow interface
-  );
+    int           sign
+   );
 
 void add_concat_layer_fix8b(
     void*   p_bmcpl,
@@ -627,6 +636,29 @@ void add_eltwise_binary_layer_fix8b(
     int*          scale,
     int*          rshift_num
   );
+
+/*
+ * the EXtended version supports different input data widths, ie., a fix8b input A, and a fix16b const input B (coeff).
+ * In this API:
+ * - input A is fix8b;
+ * - input B is fix16b (const/coeff), which is physically split into hi8 and lo8;
+ * - both hi8 and lo8 const tensors should already added before this call (so their data pointer is not needed);
+ * - the sign info of both inputs is passed in input_sign[2].
+ * - two inputs and the output have the same shape
+ */
+void add_eltwise_binary_layer_fix8b_ex(
+    void*          p_bmcpl,
+    const char*    input_A_name,
+    const int*     input_A_shape,
+    int            input_A_dim,
+    const char*    input_B_hi8_name,
+    const char*    input_B_lo8_name,
+    const char*    output_name,
+    int            binary_op,    /* BINARY_MUL */
+    int            input_sign[2],
+    int            input_scale[2],
+    int            input_rshift_num[2],
+    int            out_sign);
 
 void add_const_binary_layer_fix8b(
     void*         p_bmcpl,
@@ -995,6 +1027,21 @@ void add_arith_shift_layer_fix8b(
     int                shift_mode,
     int                in_type,
     int                out_type);
+
+// slicelike requires exactly two inputs;
+// the data type (including the sign) of the output is the same as that of the 1st input;
+void add_slice_like_layer_fix8b(
+    void*   		p_bmcpl,
+    const int* const* 	input_shape,
+    const int*    	input_shape_dim,
+    const char* const*  input_name,
+    const int*    	output_shape,
+    int     		output_shape_dim,
+    const char*   	output_name,
+    const int*    	axis,
+    int     		axis_num,
+    const int*      input_sign);
+
 
 #ifdef __cplusplus
 }

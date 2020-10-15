@@ -100,10 +100,11 @@ int  bmcpu_user_reshape(void* bmcpu_handle, void *param,
  * @retval  0      success
  * @retval  other  fail
  */
-int  bmcpu_dtype(void* bmcpu_handle, int op_type,
+int  bmcpu_dtype(void* bmcpu_handle, int op_type, const void *param,
+                 size_t param_size,
                  const vector<int> &input_dtypes,
                  vector<int> &output_dtypes);
-int  bmcpu_user_dtype(void* bmcpu_handle,
+int  bmcpu_user_dtype(void* bmcpu_handle, void *param,
                       const vector<int> &input_dtypes,
                       vector<int> &output_dtypes);
 

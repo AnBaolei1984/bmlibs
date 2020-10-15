@@ -83,16 +83,17 @@ typedef enum {
 /*
 * bm performace monitor
 */
-struct bm_perf_monitor {
+typedef struct bm_perf_monitor {
   long long buffer_start_addr; /*buffer address to store perf data*/
   int buffer_size; /*buffer size*/
   PERF_MONITOR_ID monitor_id; /*PERF_MONITOR_GDMA or PERF_MONITOR_TPU*/
-};
+} bm_perf_monitor_t;
 
 typedef union {
   struct {
     bm_mem_type_t mem_type : 3;
-    unsigned int reserved : 29;
+    unsigned int gmem_heapid : 3;
+    unsigned int reserved : 26;
   } u;
   unsigned int rawflags;
 } bm_mem_flags_t;
@@ -180,6 +181,16 @@ bm_status_t bm_dev_query(int devid);
  *          Other code  Fails.
  */
 bm_status_t bm_dev_request(bm_handle_t *handle, int devid);
+
+/**
+ * @name    bm_get_devid
+ * @brief   To get device index for the given handle
+ * @ingroup bmlib_runtime
+ *
+ * @param [in] handle  The given handle
+ * @retval  int  device index that the handle points to.
+ */
+int bm_get_devid(bm_handle_t handle);
 
 /**
  * @name    bm_dev_free
@@ -565,24 +576,6 @@ bm_status_t bm_memcpy_d2d_stride(bm_handle_t     handle,
                                  int             format_size);
 
 /**
- * @name    bm_memcpy_c2c
- * @brief   To copy data from one chip to another chip.
- *          (Used in multi-chip card scenario)
- * @ingroup bmlib_runtime
- *
- * @param [in] src_handle The source device handle
- * @param [in] dst_handle The destination device handle
- * @param [in] src        The source device memory descriptor
- * @param [in] dst        The destination device memory descriptor
- * @param [in] force_dst_cdma If use the CDMA engine of the destination device
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_memcpy_c2c(bm_handle_t src_handle, bm_handle_t dst_handle,
-                          bm_device_mem_t src, bm_device_mem_t dst,
-                          bool force_dst_cdma);
-
-/**
  * @name    bm_memset_device
  * @brief   To fill in specified device memory with the given value
  * @ingroup bmlib_runtime
@@ -594,6 +587,21 @@ bm_status_t bm_memcpy_c2c(bm_handle_t src_handle, bm_handle_t dst_handle,
  *          Other code  Fails.
  */
 bm_status_t bm_memset_device(bm_handle_t handle, const int value,
+                             bm_device_mem_t mem);
+
+/**
+ * @name    bm_memset_device_ext
+ * @brief   To fill in specified device memory with the given value and mode
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [in]   value  The pointer of value used to fill
+ * @param [in]   mode   The valid bytes of *value
+ * @param [in]  mem     The device memory which will be filled in
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_memset_device_ext(bm_handle_t handle, void* value, int mode,
                              bm_device_mem_t mem);
 
 /**
@@ -849,79 +857,6 @@ typedef struct bm_profile {
  */
 bm_status_t bm_get_profile(bm_handle_t handle, bm_profile_t *profile);
 
-struct bm_trace_item_data {
-  int trace_type; /*0---cdma; 1---api*/
-  unsigned long sent_time;
-  unsigned long start_time;
-  unsigned long end_time;
-  int api_id;
-  int cdma_dir;
-};
-
-/**
- * @name    bm_trace_enable
- * @brief   To enable trace for the current thread.
- * @ingroup bmlib_runtime
- *
- * @parama [in] handle  The device handle
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_trace_enable(bm_handle_t handle);
-
-/**
- * @name    bm_trace_disable
- * @brief   To disable trace for the current thread.
- * @ingroup bmlib_runtime
- *
- * @parama [in] handle  The device handle
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_trace_disable(bm_handle_t handle);
-
-/**
- * @name    bm_traceitem_number
- * @brief   To get the number of traced items of the current thread
- * @ingroup bmlib_runtime
- *
- * @param [in]  handle  The device handle
- * @param [out] number  The number of traced items
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_traceitem_number(bm_handle_t handle, long *number);
-
-/**
- * @name    bm_trace_dump
- * @brief   To get one traced item data
- *          (the oldest recorded item of the current thread).
- *          Once fetched, this item data is no longer recorded in kernel.
- * @ingroup  bmlib_runtime
- *
- * @param [in]  handle     The device handle
- * @param [out] trace_data The traced data
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_trace_dump(bm_handle_t handle, struct bm_trace_item_data *trace_data);
-
-/**
- * @name    bm_trace_dump_all
- * @brief   To get all the traced item data of the current thread.
- *          Once fetched, the item data is no longer recorded in kernel.
- *          (bm_traceitem_number should be called first to determine how many
- *          items are available. Buffer should be allocated to store the
- *          traced item data).
- * @ingroup  bmlib_runtime
- *
- * @param [in]  handle     The device handle
- * @param [out] trace_data The traced data
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_trace_dump_all(bm_handle_t handle,
-                              struct bm_trace_item_data *trace_data);
 
 /**
  * @name    bm_get_last_api_process_time_us
@@ -931,17 +866,6 @@ bm_status_t bm_get_last_api_process_time_us(bm_handle_t handle,
                                             unsigned long *time_us);
 
 /*******************tpu clock and module reset releated functions *************/
-/**
- * @name    bm_set_module_reset
- * @brief   To reset TPU module. (Only valid in PCIE mode)
- * @ingroup bmlib_runtime
- *
- * @param [in]  handle  The device handle
- * @param [in]  module  The ID of module to reset
- * @retval  BM_SUCCESS  Succeeds.
- *          Other code  Fails.
- */
-bm_status_t bm_set_module_reset(bm_handle_t handle, MODULE_ID module);
 
 /**
  * @name    bm_set_clk_tpu_freq
@@ -1072,7 +996,7 @@ typedef void (*bmlib_api_dbg_callback)(int, int, int, const char*);
 void bmlib_set_api_dbg_callback(bmlib_api_dbg_callback callback);
 
 /**
- * @name    bm_start_cpu
+ * @name    bmcpu_start_cpu
  * @brief   Start cpu in pcie mode
  * @ingroup bmlib_log
  *
@@ -1082,10 +1006,10 @@ void bmlib_set_api_dbg_callback(bmlib_api_dbg_callback callback);
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_start_cpu(bm_handle_t handle, char *boot_file, char *core_file);
+bm_status_t bmcpu_start_cpu(bm_handle_t handle, char *boot_file, char *core_file);
 
 /**
- * @name    bm_open_process
+ * @name    bmcpu_open_process
  * @brief   Open a process to do some work
  * @ingroup bmlib_log
  *
@@ -1095,10 +1019,10 @@ bm_status_t bm_start_cpu(bm_handle_t handle, char *boot_file, char *core_file);
  * @retval  >= 0 process handle
  *          < 0  Other code Fails.
  */
-int bm_open_process(bm_handle_t handle, unsigned int flags, int timeout);
+int bmcpu_open_process(bm_handle_t handle, unsigned int flags, int timeout);
 
 /**
- * @name    bm_load_library
+ * @name    bmcpu_load_library
  * @brief   Load a share library(so) to specific process
  * @ingroup bmlib_log
  *
@@ -1109,10 +1033,10 @@ int bm_open_process(bm_handle_t handle, unsigned int flags, int timeout);
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_load_library(bm_handle_t handle, int process_handle, char *library_file, int timeout);
+bm_status_t bmcpu_load_library(bm_handle_t handle, int process_handle, char *library_file, int timeout);
 
 /**
- * @name    bm_exec_function
+ * @name    bmcpu_exec_function
  * @brief   Execute specific function in specific process
  * @ingroup bmlib_log
  *
@@ -1126,7 +1050,7 @@ bm_status_t bm_load_library(bm_handle_t handle, int process_handle, char *librar
  *          >0  code fails from bmlib
  *          <0  code fails from function
  */
-int bm_exec_function(bm_handle_t handle,
+int bmcpu_exec_function(bm_handle_t handle,
                      int process_handle,
                      char *function_name,
                      void *function_param,
@@ -1134,7 +1058,7 @@ int bm_exec_function(bm_handle_t handle,
                      int timeout);
 
 /**
- * @name    bm_exec_function_async
+ * @name    bmcpu_exec_function_async
  * @brief   Execute specific function in specific process asynchronous
  *          user should use bm_query_exec_function_result to query result
  * @ingroup bmlib_log
@@ -1147,7 +1071,7 @@ int bm_exec_function(bm_handle_t handle,
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_exec_function_async(bm_handle_t handle,
+bm_status_t bmcpu_exec_function_async(bm_handle_t handle,
                                    int process_handle,
                                    char *function_name,
                                    void *function_param,
@@ -1155,7 +1079,7 @@ bm_status_t bm_exec_function_async(bm_handle_t handle,
                                    unsigned long long *api_handle);
 
 /**
- * @name    bm_query_exec_function_result
+ * @name    bmcpu_query_exec_function_result
  * @brief   Query result from function called by bm_exec_function
  * @ingroup bmlib_log
  *
@@ -1166,10 +1090,10 @@ bm_status_t bm_exec_function_async(bm_handle_t handle,
  *          >0  code fails from bmlib
  *          <0  code fails from function
  */
-int bm_query_exec_function_result(bm_handle_t handle, unsigned long long api_handle, int timeout);
+int bmcpu_query_exec_function_result(bm_handle_t handle, unsigned long long api_handle, int timeout);
 
 /**
- * @name    bm_map_phys_addr
+ * @name    bmcpu_map_phys_addr
  * @brief   Map physical address in specific process
  * @ingroup bmlib_log
  *
@@ -1181,10 +1105,10 @@ int bm_query_exec_function_result(bm_handle_t handle, unsigned long long api_han
  * @retval  >0  virtual address
  *          0   fails
  */
-void *bm_map_phys_addr(bm_handle_t handle, int process_handle, void *phys_addr, unsigned int size, int timeout);
+void *bmcpu_map_phys_addr(bm_handle_t handle, int process_handle, void *phys_addr, unsigned int size, int timeout);
 
 /**
- * @name    bm_close_process
+ * @name    bmcpu_close_process
  * @brief   Close process
  * @ingroup bmlib_log
  *
@@ -1194,7 +1118,7 @@ void *bm_map_phys_addr(bm_handle_t handle, int process_handle, void *phys_addr, 
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_close_process(bm_handle_t handle, int process_handle, int timeout);
+bm_status_t bmcpu_close_process(bm_handle_t handle, int process_handle, int timeout);
 
 /**
  * @name    bm_enable_perf_monitor
@@ -1206,7 +1130,7 @@ bm_status_t bm_close_process(bm_handle_t handle, int process_handle, int timeout
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_enable_perf_monitor(bm_handle_t handle, bm_perf_monitor *perf_monitor);
+bm_status_t bm_enable_perf_monitor(bm_handle_t handle, bm_perf_monitor_t *perf_monitor);
 
 /**
  * @name    bm_disable_perf_monitor
@@ -1218,11 +1142,11 @@ bm_status_t bm_enable_perf_monitor(bm_handle_t handle, bm_perf_monitor *perf_mon
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_disable_perf_monitor(bm_handle_t handle, bm_perf_monitor *perf_monitor);
+bm_status_t bm_disable_perf_monitor(bm_handle_t handle, bm_perf_monitor_t *perf_monitor);
 
 /**
- * @name    bm_set_log
- * @brief   Set log options
+ * @name    bmcpu_set_log
+ * @brief   Set cpu log options
  * @ingroup bmlib_log
  *
  * @param [in]  handle          The device handle
@@ -1232,11 +1156,11 @@ bm_status_t bm_disable_perf_monitor(bm_handle_t handle, bm_perf_monitor *perf_mo
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_set_log(bm_handle_t handle, unsigned int log_level,  unsigned int log_to_console, int timeout);
+bm_status_t bmcpu_set_log(bm_handle_t handle, unsigned int log_level,  unsigned int log_to_console, int timeout);
 
 /**
- * @name    bm_get_log
- * @brief   Get log file
+ * @name    bmcpu_get_log
+ * @brief   Get cpu log file
  * @ingroup bmlib_log
  *
  * @param [in]  handle          The device handle
@@ -1246,10 +1170,10 @@ bm_status_t bm_set_log(bm_handle_t handle, unsigned int log_level,  unsigned int
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_get_log(bm_handle_t handle, int process_handle, char *log_file, int timeout);
+bm_status_t bmcpu_get_log(bm_handle_t handle, int process_handle, char *log_file, int timeout);
 
 /**
- * @name    bm_sync_cpu_time
+ * @name    bmcpu_sync_time
  * @brief   Sync device cpu time with host
  * @ingroup bmlib_log
  *
@@ -1257,13 +1181,21 @@ bm_status_t bm_get_log(bm_handle_t handle, int process_handle, char *log_file, i
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
  */
-bm_status_t bm_sync_cpu_time(bm_handle_t handle);
+bm_status_t bmcpu_sync_time(bm_handle_t handle);
 
 /*******************trace and profile releated functions **********************/
+struct bm_heap_stat {
+  unsigned int mem_total;
+  unsigned int mem_avail;
+  unsigned int mem_used;
+};
+
 typedef struct bm_dev_stat {
   int mem_total;
   int mem_used;
   int tpu_util;
+  int heap_num;
+  struct bm_heap_stat heap_stat[4];
 } bm_dev_stat_t;
 
 /**
@@ -1277,6 +1209,20 @@ typedef struct bm_dev_stat {
  *          Other code  Fails.
  */
 bm_status_t bm_get_stat(bm_handle_t handle, bm_dev_stat_t *stat);
+
+/**
+ * @name    bm_get_gmem_heap_id
+ * @brief   To get the heap id of allocated global memory
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [in]  pmem The allocted global memory
+ * @param [out] heapid The result of get heap id
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+
+bm_status_t bm_get_gmem_heap_id(bm_handle_t handle, bm_device_mem_t *pmem, unsigned int *heapid);
 
 #if defined(__cplusplus)
 }

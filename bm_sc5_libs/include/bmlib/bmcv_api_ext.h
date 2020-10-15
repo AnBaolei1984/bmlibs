@@ -111,6 +111,11 @@ typedef struct bmcv_rect {
     int crop_h;
 } bmcv_rect_t;
 
+typedef struct bmcv_dst_crop_attr_s {
+    int dst_crop_w;
+    int dst_crop_h;
+} bmcv_dst_crop_attr_t;
+
 typedef struct bmcv_copy_to_atrr_s {
     int           start_x;
     int           start_y;
@@ -119,6 +124,17 @@ typedef struct bmcv_copy_to_atrr_s {
     unsigned char padding_b;
     int           if_padding;
 } bmcv_copy_to_atrr_t;
+
+typedef struct bmcv_padding_atrr_s {
+    unsigned int            dst_crop_stx;
+    unsigned int            dst_crop_sty;
+    unsigned int            dst_crop_w;
+    unsigned int            dst_crop_h;
+    unsigned char padding_r;
+    unsigned char padding_g;
+    unsigned char padding_b;
+    int           if_memset;
+} bmcv_padding_atrr_t;
 
 typedef struct bm_image_format_info {
     int                      plane_nb;
@@ -226,8 +242,8 @@ bm_handle_t bm_image_get_handle(bm_image *image);
  */
 bm_status_t bm_image_write_to_bmp(bm_image image, const char *filename);
 
-bm_status_t bm_image_copy_host_to_device(bm_image image, void **buffers);
-bm_status_t bm_image_copy_device_to_host(bm_image image, void **buffers);
+bm_status_t bm_image_copy_host_to_device(bm_image image, void *buffers[]);
+bm_status_t bm_image_copy_device_to_host(bm_image image, void *buffers[]);
 
 bm_status_t bm_image_attach(bm_image image, bm_device_mem_t *device_memory);
 bm_status_t bm_image_detach(bm_image);
@@ -237,7 +253,7 @@ bm_status_t bm_image_get_stride(bm_image image, int *stride);
 bm_status_t bm_image_get_format_info(bm_image *            image,
                                      bm_image_format_info *info);
 
-bm_status_t bm_image_dev_mem_alloc(bm_image image, int heap_id = BMCV_HEAP_ANY);
+bm_status_t bm_image_alloc_dev_mem(bm_image image, int heap_id = BMCV_HEAP_ANY);
 bm_status_t bm_image_get_byte_size(bm_image image, int *size);
 bm_status_t bm_image_get_device_mem(bm_image image, bm_device_mem_t *mem);
 
@@ -275,14 +291,43 @@ bm_status_t bmcv_image_copy_to(bm_handle_t         handle,
                                bm_image            input,
                                bm_image            output);
 
-typedef struct bmcv_warp_matrix_s {
-    float m[6];
-} bmcv_warp_matrix;
+bm_status_t bmcv_image_crop(bm_handle_t         handle,
+                            int                 crop_num,
+                            bmcv_rect_t *       rects,
+                            bm_image            input,
+                            bm_image *          output);
 
-typedef struct bmcv_warp_image_matrix_s {
-    bmcv_warp_matrix *matrix;
-    int               matrix_num;
-} bmcv_warp_image_matrix;
+bm_status_t bmcv_image_split(bm_handle_t         handle,
+                             bm_image            input,
+                             bm_image *          output);
+
+typedef struct bmcv_affine_matrix_s {
+    float m[6];
+} bmcv_affine_matrix;
+
+typedef struct bmcv_affine_image_matrix_s {
+    bmcv_affine_matrix *matrix;
+    int                 matrix_num;
+} bmcv_affine_image_matrix;
+
+typedef struct bmcv_perspective_matrix_s {
+    float m[9];
+} bmcv_perspective_matrix;
+
+typedef struct bmcv_perspective_image_matrix_s {
+    bmcv_perspective_matrix *matrix;
+    int                      matrix_num;
+} bmcv_perspective_image_matrix;
+
+typedef struct bmcv_perspective_coordinate_s {
+    int x[4];
+    int y[4];
+} bmcv_perspective_coordinate;
+
+typedef struct bmcv_perspective_image_coordinate_s {
+    bmcv_perspective_coordinate *coordinate;
+    int                         coordinate_num;
+} bmcv_perspective_image_coordinate;
 
 typedef struct bmcv_resize_s {
     int start_x;
@@ -327,12 +372,26 @@ typedef struct bmcv_convert_to_attr_s {
  *of matrix_num[n]. If setting to 4N, the output image number should have
  *summary of ROUNDUP(matrix_num[n], 4)/4
  */
-bm_status_t bmcv_image_warp(
-        bm_handle_t            handle,
-        int                    image_num,
-        bmcv_warp_image_matrix matrix[4],
-        bm_image *             input,
-        bm_image *             output);
+bm_status_t bmcv_image_warp_affine(
+        bm_handle_t              handle,
+        int                      image_num,
+        bmcv_affine_image_matrix matrix[4],
+        bm_image *               input,
+        bm_image *               output);
+
+bm_status_t bmcv_image_warp_perspective(
+        bm_handle_t                   handle,
+        int                           image_num,
+        bmcv_perspective_image_matrix matrix[4],
+        bm_image *                    input,
+        bm_image *                    output);
+
+bm_status_t bmcv_image_warp_perspective_with_coordinate(
+        bm_handle_t                       handle,
+        int                               image_num,
+        bmcv_perspective_image_coordinate coordinate[4],
+        bm_image *                        input,
+        bm_image *                        output);
 
 bm_status_t bmcv_image_resize(
         bm_handle_t          handle,
@@ -399,6 +458,15 @@ bm_status_t bmcv_image_draw_rectangle(
         unsigned char g,
         unsigned char b);
 
+bm_status_t bmcv_image_fill_rectangle(
+        bm_handle_t   handle,
+        bm_image      image,
+        int           rect_num,
+        bmcv_rect_t * rect,
+        unsigned char r,
+        unsigned char g,
+        unsigned char b);
+
 bm_status_t bmcv_sort(
         bm_handle_t     handle,
         bm_device_mem_t src_index_addr,
@@ -449,7 +517,6 @@ bm_status_t bmcv_base64_dec(
 bm_status_t bmcv_debug_savedata(bm_image image, const char *name);
 
 #ifndef USING_CMODEL
-
 bm_status_t bmcv_image_vpp_convert(
     bm_handle_t           handle,
     int                   output_num,
@@ -466,76 +533,43 @@ bm_status_t bmcv_image_vpp_csc_matrix_convert(bm_handle_t           handle,
                                               csc_matrix_t *        matrix = nullptr,
                                               bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR,
                                               bmcv_rect_t *         crop_rect = NULL);
+
+bm_status_t bmcv_image_vpp_convert_padding(
+    bm_handle_t           handle,
+    int                   output_num,
+    bm_image              input,
+    bm_image *            output,
+    bmcv_padding_atrr_t *        padding_attr,
+    bmcv_rect_t *         crop_rect = NULL,
+    bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR);
+
+bm_status_t bmcv_image_vpp_stitch(
+    bm_handle_t           handle,
+    int                   input_num,
+    bm_image*              input,
+    bm_image            output,
+    bmcv_rect_t*         dst_crop_rect,
+    bmcv_rect_t*         src_crop_rect = NULL,
+    bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR);
 #endif
 
 /**
  * Legacy functions
  */
 
-bm_status_t bmcv_resize(
-        bm_handle_t       handle,
-        int               input_num,
-        bmcv_resize_image resize_attr[],
-        bm_image *        input,
-        bm_image *        output) __attribute__((deprecated));
+typedef bmcv_affine_image_matrix bmcv_warp_image_matrix;
+typedef bmcv_affine_matrix bmcv_warp_matrix;
 
-bm_status_t bmcv_warp(
+bm_status_t bmcv_image_warp(
         bm_handle_t            handle,
         int                    image_num,
         bmcv_warp_image_matrix matrix[4],
         bm_image *             input,
         bm_image *output) __attribute__((deprecated));
 
-bm_status_t bmcv_convert_to(
-        bm_handle_t          handle,
-        int                  input_num,
-        bmcv_convert_to_attr convert_to_attr,
-        bm_image *           input,
-        bm_image *output) __attribute__((deprecated));
+bm_status_t bm_image_dev_mem_alloc(bm_image image,
+                                   int heap_id = BMCV_HEAP_ANY) __attribute__((deprecated));
 
-bm_status_t bmcv_jpeg_enc(bm_handle_t handle,
-        int         image_num,
-        bm_image *  src,
-        void **     p_jpeg_data,
-        size_t *    out_size,
-        int quality_factor = 85) __attribute__((deprecated));
-
-bm_status_t bmcv_jpeg_dec(bm_handle_t handle,
-        void **     p_jpeg_data,
-        size_t *    in_size,
-        int         image_num,
-        bm_image *  dst) __attribute__((deprecated));
-
-bm_status_t bmcv_copy_to(bm_handle_t         handle,
-        bmcv_copy_to_atrr_t copy_to_attr,
-        bm_image            input,
-        bm_image output) __attribute__((deprecated));
-
-bm_status_t bmcv_draw_rectangle(bm_handle_t   handle,
-        bm_image      image,
-        int           rect_num,
-        bmcv_rect_t * rect,
-        int           line_width,
-        unsigned char r,
-        unsigned char g,
-        unsigned char b) __attribute__((deprecated));
-
-bm_status_t bmcv_feature_match_fix8b(
-        bm_handle_t     handle,
-        bm_device_mem_t input_data_global_addr,
-        bm_device_mem_t db_data_global_addr,
-        bm_device_mem_t output_sorted_similarity_global_addr,
-        bm_device_mem_t output_sorted_index_global_addr,
-        int             batch_size,
-        int             feature_size,
-        int             db_size,
-        int             sort_cnt,
-        int             rshiftbits) __attribute__((deprecated));
-
-bm_handle_t get_handle_from_bm_image(bm_image *image)
-    __attribute__((deprecated));
-
-int bm_image_plane_num(bm_image) __attribute__((deprecated));
 
 #if defined(__cplusplus)
 }

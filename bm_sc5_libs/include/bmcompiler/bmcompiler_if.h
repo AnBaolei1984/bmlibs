@@ -129,6 +129,15 @@ void add_layer_name(void* p_bmcpl, int layer_id, const char * layer_name);
 int get_max_layer_id(void* p_bmcompiler_net);
 void set_bmcompiler_profile(void * p_bmcpl, bool enable);
 
+
+/**
+ * \brief enable output whitelist mode
+ * \param enable: true or false, default false
+ *
+ * outputs only in whitelist will be kept
+ */
+void set_enable_output_whitelist(void * p_bmcpl, bool enable);
+
 /**
  * \brief set layer bmlang flag
  * \param flag   true: bmlang info will be added to layer type when showing graph
@@ -1943,6 +1952,16 @@ void add_unfold_layer(
     int size,
     int step);
 
+void add_matrix_band_part_layer(
+        void *p_bmcpl,
+        const int *input_shape,
+        int input_dim,
+        const char *input_name,
+        const int *output_shape,
+        int output_dim,
+        const char *output_name,
+        int lower,
+        int upper);
 
 #ifdef __cplusplus
 }

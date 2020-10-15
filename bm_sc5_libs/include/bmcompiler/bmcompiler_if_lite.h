@@ -426,11 +426,51 @@ void bm_add_binary_layer(
         const char* out_name,
         int binary_op
         );
+
 void bm_add_mish_activation(
         void* handle,
         const char* in_name,
         const char* out_name
         );
+
+void bm_add_shape_ref_layer(
+        void* handle,
+        const char* in_name,
+        const char* out_name
+        );
+
+void bm_add_shape_assign_layer(
+        void* handle,
+        const char* in_name,
+        const char* shape_name,
+        const char* out_name
+    );
+
+void bm_add_tile_layer(
+    void* handle,
+    const char* in_name,
+    const char* coeff_name,
+    const char* out_name
+    );
+
+//shape(cond)=shape(then)=shape(else)
+void bm_add_eltwise_select_layer(
+        void* handle,
+        const char* cond_name,
+        const char* then_name,
+        const char* else_name,
+        const char* out_name
+    );
+//shape(cond)!=shape(then), shape(then)=shape(else)
+void bm_add_batch_select_layer(
+        void* handle,
+        const char* cond_name,
+        const char* then_name,
+        const char* else_name,
+        const char* out_name
+    );
+        
+    
 
 #ifdef __cplusplus
 }

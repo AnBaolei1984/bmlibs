@@ -406,6 +406,11 @@ void add_batch_to_space_layer_unified(
   const int*  block_sizes,
   const int*  crop_sizes);
 
+void add_number_like_layer_unified(
+  void*          p_bmcpl,
+  const DataInfo in_data,
+  const DataInfo b_data,
+  const DataInfo out_data);
 #ifdef __cplusplus
 }
 #endif

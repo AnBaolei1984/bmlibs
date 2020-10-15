@@ -142,6 +142,7 @@ static inline bm_status_t bm_image_from_frame (bm_handle_t       &bm_handle,
     bm_image_dev_mem_alloc(out);
     bmcv_rect_t crop_rect = {0, 0, in.width, in.height};
     bmcv_image_vpp_convert(bm_handle, 1, cmp_bmimg, &out, &crop_rect);
+    bm_image_destroy(cmp_bmimg);
   } else { /* UNCOMPRESSED NV12 FORMAT */
     /* sanity check */
     if ((0 == in.height) || (0 == in.width) || \
