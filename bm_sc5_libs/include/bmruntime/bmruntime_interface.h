@@ -280,6 +280,22 @@ bool bmrt_launch_data(void* p_bmrt, const char* net_name, void* const input_data
  */
 void bmrt_trace(void* p_bmrt);
 
+/**
+ * @name    bmrt_must_alloc_device_mem
+ * @brief   make sure device mem allocated or exit(-1)
+ * @ingroup bmruntime
+ * 
+ * When alloc device mem failed, program will exit(-1)
+ * and more, profile will record the mem alloc info when enabling profile
+ * 
+ * @param [in]    p_bmrt         Bmruntime that had been created
+ * @param [out]   pmem           device_mem pointer
+ * @param [in]    size           mem size needed
+ * @return addr of pmem, equals to bm_mem_get_device_addr(*pmem)
+ */ 
+unsigned long long bmrt_must_alloc_device_mem(void* p_bmrt, bm_device_mem_t* pmem, unsigned int size);
+void bmrt_must_free_device_mem(void* p_bmrt, bm_device_mem_t mem);
+
 #if defined (__cplusplus)
 }
 #endif

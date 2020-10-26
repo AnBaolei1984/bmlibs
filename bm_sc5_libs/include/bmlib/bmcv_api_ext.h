@@ -377,21 +377,24 @@ bm_status_t bmcv_image_warp_affine(
         int                      image_num,
         bmcv_affine_image_matrix matrix[4],
         bm_image *               input,
-        bm_image *               output);
+        bm_image *               output,
+        int                      use_bilinear = 0);
 
 bm_status_t bmcv_image_warp_perspective(
         bm_handle_t                   handle,
         int                           image_num,
         bmcv_perspective_image_matrix matrix[4],
         bm_image *                    input,
-        bm_image *                    output);
+        bm_image *                    output,
+        int                           use_bilinear = 0);
 
 bm_status_t bmcv_image_warp_perspective_with_coordinate(
         bm_handle_t                       handle,
         int                               image_num,
         bmcv_perspective_image_coordinate coordinate[4],
         bm_image *                        input,
-        bm_image *                        output);
+        bm_image *                        output,
+        int                               use_bilinear = 0);
 
 bm_status_t bmcv_image_resize(
         bm_handle_t          handle,

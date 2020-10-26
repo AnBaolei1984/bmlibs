@@ -341,6 +341,29 @@ void add_upsample_layer_fix8b(
     int     out_sign
   );
 
+/*
+ * the first input is the tensor to be upsampled, and the 2nd input is
+ * the "mask" which contains indices in the output tensor, if the index
+ * equals to -1, then the corresponding output tensor elements is 0.
+ * some constraints:
+ * - these two input tensors should have exactly the same shape.
+ * - the 1st input tensor data type is fix8b
+ * - the 2nd input tensor data type is int32
+ */
+void add_upsamplemask_layer_fix8b(
+    void*   		p_bmcpl,
+    int     		input_num,
+    const int* const   input_shape[2],
+    const int    	input_shape_dim[2],
+    const char* const  input_name[2],
+    const int*    	output_shape,
+    int     		output_shape_dim,
+    const char*   	output_name,
+    const char*   	layer_name,
+    int             in_sign,
+    int             out_sign
+  );
+
 void add_fc_layer_fix8b(
     void*   p_bmcpl,
     int*    input_shape,
@@ -397,6 +420,36 @@ void add_scale_layer_fix8b(
     void*   rshift_num
   );
 
+/*
+ * the previous API `add_scale_layer_fix8b()` has two assumptions:
+ * 1. the `scale` is always coeff/const.
+ * 2. the `axis` always takes the default value 1 (i.e., start from channel)
+ *
+ * the v2 API does not make such assumptions:
+ *
+ * `input_num` can be 1 or 2;
+ * `input_xxx[]` index:
+ *   - 0: input, mandatory
+ *   - 1: scale, optional. if not present, use `scale_factor`. one and only one should be present.
+ */
+void add_scale_layer_fix8b_v2(
+    void*               p_bmcpl,
+    int                 input_num,
+    const int* const*   input_shape,
+    const int*          input_shape_dim,
+    const char* const*  input_name,
+    const int*          output_shape,
+    int                 output_shape_dim,
+    const char*         output_name,
+    const char*         layer_name,
+    const float*        scale_factor, // NULL if input_num=2
+    const float*        bias_factor,  // NULL if bias_term=false
+    int                 num_axes,
+    int                 axis,
+    int                 in_sign,
+    int                 out_sign,
+    void*               rshift_num);
+
 void add_eltwise_layer_fix8b(
     void*   p_bmcpl,
     int     input_num,
@@ -423,6 +476,7 @@ void add_interp_layer_fix8b(
     const char*   output_name,
     int   	  pad_bag,
     int   	  pad_end,
+    int           method,
     int           sign
    );
 
@@ -713,19 +767,37 @@ void add_broadcast_binary_layer_fix8b(
     int*          scale,
     int*          rshift_num);
 
+/*
+ * Tile op requires two inputs:
+ * 1. A input tensor, which can be a normal (dynamic) tensor or a constant tensor. when the input tensor
+ *    is a constant tensor, its content comes from `input_data`; otherwise, its content is tracked
+ *    by `input_name`.
+ * 2. The tile parameters, which is an array of integers. The array can be either constant (in this case,
+ *    the values come from tile_param[]), or from a shape tensor (in this case, the values come from a SHAPE
+ *    tensor whose name is `shape_tensor_name`).
+ *
+ * other constraints:
+ * - input tensor and tile parameters cannot be both constant
+ * - the number of integers in the parameter array must match (i.e., not less than) the rank of the input tensor.
+ * - type can be either 0 (TF's Tile) or 1 (MXNET's Repeat).
+ */
 void add_tile_layer_fix8b(
     void *p_bmcpl,
+    /* the following are info about tile op's input tensor */
     const char *input_name,
     const int *input_shape,
     int input_dim,
-    int input_is_coeff,
+    int input_is_const,
     const float *input_data,
-    int coeff_is_fixed,
-    const char *coeff_name,
-    const int *tile_coeff,
+    /* the following are info about tile op's parameters */
+    int param_is_const,
+    const char *shape_tensor_name,
+    const int *tile_param,
+    /* other info */
     const char *output_name,
     int     in_sign,
-    int     out_sign);
+    int     out_sign,
+    int     type);
 
 void add_space_to_batch_layer_fix8b(
   void*      p_bmcpl,

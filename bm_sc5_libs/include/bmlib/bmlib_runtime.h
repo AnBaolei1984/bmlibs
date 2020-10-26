@@ -125,12 +125,14 @@ typedef struct bm_mem_desc bm_system_mem_t;
 struct bm_context;
 typedef struct bm_context *bm_handle_t;
 
+void bmlib_log(const char *tag, int level, const char *fmt, ...);
+
 #ifndef USING_CMODEL
 #define BM_CHECK_RET(call)                                                    \
   do {                                                                        \
     bm_status_t ret = call;                                                   \
     if (ret != BM_SUCCESS) {                                                  \
-      printf("BM_CHECK_RET fail %s: %s: %d\n", __FILE__, __func__, __LINE__); \
+      bmlib_log("BM_CHECK",16,"BM_CHECK_RET fail %s: %s: %d\n", __FILE__, __func__, __LINE__); \
       return ret;                                                             \
     }                                                                         \
   } while (0)
@@ -139,7 +141,7 @@ typedef struct bm_context *bm_handle_t;
   do {                                         \
     bm_status_t ret = call;                    \
     if (ret != BM_SUCCESS) {                   \
-      printf("BM_CHECK_RET failed %d\n", ret); \
+      bmlib_log("BM_CHECK",16,"BM_CHECK_RET failed %d\n", ret);\
       ASSERT(0);                               \
       exit(-ret);                              \
     }                                          \
@@ -368,7 +370,7 @@ bm_status_t bm_malloc_device_byte(bm_handle_t handle, bm_device_mem_t *pmem,
  *
  * @param [in]  handle  The device handle
  * @param [out]  pmem   The result device memory descriptor
- * @param [in]  heap_id The heap where to allocate  0/1
+ * @param [in]  heap_id The heap where to allocate  0/1/2
  * @param [in]   size   The number of bytes to allocate
  * @retval  BM_SUCCESS  Succeeds.
  *          Other code  Fails.
@@ -906,6 +908,7 @@ struct bm_misc_info {
   unsigned int driver_version;
   int domain_bdf;
   int board_version; /*hardware board version [23:16]-mcu sw version, [15:8]-board type, [7:0]-hw version*/
+  int a53_enable;
 };
 
 /**

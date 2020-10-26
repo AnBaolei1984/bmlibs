@@ -1089,7 +1089,8 @@ void add_tile_layer_v2(
         int    coeff_is_fixed,
         const char*  coeff_name, //when is not fixed, name must be a valid shape tensor name
         const int*   tile_coeff, //when is not fixed, tile_coeff is not used
-        const char*  output_name
+        const char*  output_name,
+        int type /* 0: Tile; 1: Repeat */
         );
 
 void add_expand_layer(void 	*p_bmcpl,

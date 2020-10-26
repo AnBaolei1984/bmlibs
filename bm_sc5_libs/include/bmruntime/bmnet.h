@@ -20,8 +20,6 @@
 #include <string>
 #include <memory>
 
-#define NAMESPACE_USED  std
-
 namespace bmcnn {
 
 class BMNet
@@ -64,7 +62,7 @@ public:
      * (1) The name could only be of blob in input or output.\n
      * (2) If the name is not spotted, null pointer will be returned.\n
      */
-    const NAMESPACE_USED::shared_ptr<BMBlob> blob_by_name(const std::string &name) const;
+    const std::shared_ptr<BMBlob> blob_by_name(const std::string &name) const;
     /**
      * \brief Get maximum shape allowed.
      */
@@ -75,7 +73,7 @@ private:
     BMNet &operator=(const BMNet &other);
 
     bmcnn_ctx_t bmcc_ctx_;
-    std::vector<NAMESPACE_USED::shared_ptr<BMBlob> > blobs_;
+    std::vector<std::shared_ptr<BMBlob> > blobs_;
     std::vector<BMBlob *> net_input_blobs_;
     std::vector<BMBlob *> net_output_blobs_;
     std::map<std::string, size_t> blob_name_index_;
