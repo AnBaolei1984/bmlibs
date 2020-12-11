@@ -379,6 +379,21 @@ bm_status_t bm_malloc_device_byte_heap(bm_handle_t handle, bm_device_mem_t *pmem
                                   int heap_id, unsigned int size);
 
 /**
+ * @name    bm_malloc_device_byte_heap_mask
+ * @brief   To malloc device memory in size of byte within the specified heaps
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [out]  pmem   The result device memory descriptor
+ * @param [in]  heap_id_mask The mask which heaps allocate from. each bit indicate one heap
+ * @param [in]   size   The number of bytes to allocate
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_malloc_device_byte_heap_mask(bm_handle_t handle, bm_device_mem_t *pmem,
+                                  int heap_id_mask, unsigned int size);
+
+/**
  * @name    bm_free_device
  * @brief   To free device memory
  * @ingroup bmlib_runtime
@@ -576,6 +591,24 @@ bm_status_t bm_memcpy_d2d_stride(bm_handle_t     handle,
                                  int             src_stride,
                                  int             count,
                                  int             format_size);
+
+/**
+ * @name    bm_memcpy_c2c
+ * @brief   To copy data from one chip to another chip.
+ *          (Used in multi-chip card scenario)
+ * @ingroup bmlib_runtime
+ *
+ * @param [in] src_handle The source device handle
+ * @param [in] dst_handle The destination device handle
+ * @param [in] src        The source device memory descriptor
+ * @param [in] dst        The destination device memory descriptor
+ * @param [in] force_dst_cdma If use the CDMA engine of the destination device
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_memcpy_c2c(bm_handle_t src_handle, bm_handle_t dst_handle,
+                          bm_device_mem_t src, bm_device_mem_t dst,
+                          bool force_dst_cdma);
 
 /**
  * @name    bm_memset_device

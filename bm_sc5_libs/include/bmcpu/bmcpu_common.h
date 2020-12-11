@@ -44,6 +44,14 @@ typedef enum {
     CPU_RANDOM_UNIFORM            = 28, /* CPU RANDOM UNIFORM */
     CPU_GATHER_PT                 = 29, /* CPU GATHER FOR PYTORCH */
     CPU_BINARY                    = 30, /* CPU BINARY: MOD, DIV, ... */
+    CPU_TENSORFLOW_NMS_V5         = 31, /* CPU TENSORFLOW NMS V5 */
+    CPU_GENERATE_PROPOSALS        = 32, /* CPU GENERATE PROPOSALS */
+    CPU_BBOX_TRANSFORM            = 33, /* CPU BBOX TRANSFORM */
+    CPU_BOX_WITH_NMS_LIMIT        = 34, /* CPU BOX WITH NMS LIMIT */
+    CPU_COLLECT_RPN_PROPOSALS     = 35, /* CPU COLLECT RPN PROPOSALS */
+    CPU_DISTRIBUTE_FPN_PROPOSALS  = 36, /* CPU DISTRIBUTE FPN PROPOSALS */
+    CPU_DISTRIBUTE_FPN_PROPOSALS_ROI_ALIGN_CONCAT = 37,
+    CPU_PYTORCH_ROI_ALIGN         = 38, /* CPU PYTORCH ROI ALIGN */
     CPU_LAYER_NUM,
     CPU_LAYER_UNKNOW = CPU_LAYER_NUM,
     CPU_DEBUG                     = 88888, /* CPU DEBUG by dump tensor*/
@@ -51,30 +59,27 @@ typedef enum {
 
 //must be the same as bmcompiler
 typedef enum {
-  CPU_DTYPE_FP32 = 0,
-  CPU_DTYPE_FP16 = 1,
-  CPU_DTYPE_INT8 = 2,
-  CPU_DTYPE_UINT8 = 3,
-  CPU_DTYPE_INT16 = 4,
-  CPU_DTYPE_UINT16 = 5,
-  CPU_DTYPE_INT32 = 6,
-  CPU_DTYPE_UINT32 = 7,
-  CPU_DTYPE_UNKNOWN = -1,
+    CPU_DTYPE_FP32 = 0,
+    CPU_DTYPE_FP16 = 1,
+    CPU_DTYPE_INT8 = 2,
+    CPU_DTYPE_UINT8 = 3,
+    CPU_DTYPE_INT16 = 4,
+    CPU_DTYPE_UINT16 = 5,
+    CPU_DTYPE_INT32 = 6,
+    CPU_DTYPE_UINT32 = 7,
+    CPU_DTYPE_UNKNOWN = -1,
 } CPU_DATA_TYPE_T;
 
-typedef struct cpu_exp_param
-{
+typedef struct cpu_exp_param {
     float inner_scale_;
     float outer_scale_;
 } cpu_exp_param_t;
 
-typedef struct cpu_relu_param
-{
+typedef struct cpu_relu_param {
     float negative_slope_;
 } cpu_relu_param_t;
 
-typedef struct cpu_ssd_detect_out_param
-{
+typedef struct cpu_ssd_detect_out_param {
     int num_classes_;
     bool share_location_;
 
@@ -96,8 +101,7 @@ typedef struct cpu_ssd_detect_out_param
     float objectness_score_;
 } cpu_ssd_detect_out_param_t;
 
-typedef struct cpu_rpnproposal_param
-{
+typedef struct cpu_rpnproposal_param {
     int feat_stride_;
     int min_size_;
     int pre_nms_topN_;
@@ -111,11 +115,10 @@ typedef struct cpu_rpnproposal_param
     float ratios_[5];
 } cpu_rpnproposal_param_t;
 
-typedef struct cpu_roi_pooling_param
-{
-  int pooled_height_;
-  int pooled_width_;
-  float spatial_scale_;
+typedef struct cpu_roi_pooling_param {
+    int pooled_height_;
+    int pooled_width_;
+    float spatial_scale_;
 } cpu_roi_pooling_param_t;
 
 //must be the same as bmnetm by python
@@ -127,7 +130,7 @@ typedef struct {
     int position_sensitive;
 } cpu_roi_align_param_t;
 
-typedef enum{
+typedef enum {
     BOX_FORMAT_CORNER=0,
     BOX_FORMAT_CENTER=1
 } box_nms_format_t;
@@ -145,12 +148,11 @@ typedef struct {
     int out_format;       //0-corner|1-center, default 0: center means boxes are encoded as [x, y, width, height]
 } cpu_box_nms_param_t;
 
-typedef struct tag_cpu_yolo_param
-{
+typedef struct tag_cpu_yolo_param {
     int classes;
     int num;
     tag_cpu_yolo_param() {
-      num = 3;
+        num = 3;
     }
 } cpu_yolo_param_t;
 
@@ -184,7 +186,7 @@ typedef struct cpu_nms {
 typedef struct cpu_argsort_param {
     int axis;
     bool is_ascend;
-}cpu_argsort_param_t;
+} cpu_argsort_param_t;
 
 typedef struct cpu_yolov3_detect_out_param {
     int num_inputs_;
@@ -203,16 +205,16 @@ typedef struct cpu_yolov3_detect_out_param {
 
 typedef struct cpu_topk_param {
     cpu_topk_param() {
-      k      = -1;
-      axis   = -1;
-      sorted = true;
-      descending = true;
+        k      = -1;
+        axis   = -1;
+        sorted = true;
+        descending = true;
     }
     int  k;
     int  axis;
     bool sorted;
     bool descending;
-}cpu_topk_param_t;
+} cpu_topk_param_t;
 
 #define MX_TOPK_RET_INDICES 0
 #define MX_TOPK_RET_VALUE   1
@@ -226,7 +228,7 @@ typedef struct {
     int dtype = 0; //0: DTYPE_FP32, 6: DTYPE_INT32, 7: DTYPE_UINT32;
 } cpu_topk_mx_param_t;
 
-typedef enum{
+typedef enum {
     BMCPU_NCHW = 0,
     BMCPU_NHWC = 1
 } DataFormat;
@@ -240,16 +242,14 @@ typedef struct cpu_resize_interpolation_param {
     int ow;
 } cpu_resize_interpolation_param_t;
 
-typedef struct cpu_sort_per_dim_param
-{
+typedef struct cpu_sort_per_dim_param {
     int dim;
     bool is_argsort;
     bool stable;
     bool descending;
 } cpu_sort_per_dim_param_t;
 
-typedef struct cpu_masked_select_param
-{
+typedef struct cpu_masked_select_param {
     bool bcast_from_begin;
 } cpu_masked_select_param_t;
 
@@ -262,8 +262,7 @@ typedef enum {
     OP_ROUND      = 5,
 } UNARY_OP_CODE_T;
 
-typedef struct cpu_unary_param
-{
+typedef struct cpu_unary_param {
     UNARY_OP_CODE_T unary_op;
 } cpu_unary_param_t;
 
@@ -273,14 +272,12 @@ typedef enum {
     OP_DIV       = 1,  // a/b
 } BINARY_OP_CODE_T;
 
-typedef struct
-{
+typedef struct {
     BINARY_OP_CODE_T op;
     CPU_DATA_TYPE_T dtype;
 } cpu_binary_param_t;
 
-typedef struct cpu_embedding_param
-{
+typedef struct cpu_embedding_param {
     int* padding_idx;
 } cpu_embedding_param_t;
 
@@ -311,6 +308,80 @@ typedef struct cpu_random_uniform_param {
     float upper;
     long long seed;
 } cpu_random_uniform_param_t;
+
+typedef struct cpu_generate_proposals_param {
+    float spatial_scale;
+    int rpn_pre_nms_topN;
+    int rpn_post_nms_topN;
+    float rpn_nms_thresh;
+    float rpn_min_size;
+    bool angle_bound_on;
+    int angle_bound_lo;
+    int angle_bound_hi;
+    float clip_angle_thresh;
+    bool legacy_plus_one;
+} cpu_generate_proposals_param_t;
+
+typedef struct cpu_bbox_transform_param {
+    float weights[4];
+    bool apply_scale;
+    bool rotated;
+    bool angle_bound_on;
+    int angle_bound_lo;
+    int angle_bound_hi;
+    float clip_angle_thresh;
+    bool legacy_plus_one;
+} cpu_bbox_transform_param_t;
+
+typedef struct cpu_box_with_nms_limit_param {
+    float score_thresh;
+    float nms;
+    int detections_per_im;
+    bool soft_nms_enabled;
+    int soft_nms_method;
+    float soft_nms_sigma;
+    float soft_nms_min_score_thres;
+    bool rotated;
+    bool cls_agnostic_bbox_reg;
+    bool input_boxes_include_bg_cls;
+    bool output_classes_include_bg_cls;
+    bool legacy_plus_one;
+} cpu_box_with_nms_limit_param_t;
+
+typedef struct cpu_collect_rpn_proposals_param {
+    int rpn_max_level;
+    int rpn_min_level;
+    int rpn_post_nms_topN;
+} cpu_collect_rpn_proposals_param_t;
+
+typedef struct cpu_distribute_fpn_proposals_param {
+    int roi_canonical_scale;
+    int roi_canonical_level;
+    int roi_max_level;
+    int roi_min_level;
+    bool legacy_plus_one;
+} cpu_distribute_fpn_proposals_param_t;
+
+typedef struct cpu_pytorch_roi_align_param {
+    int pooled_height;
+    int pooled_width;
+    float spatial_scale;
+    int sampling_ratio;
+    bool align;
+} cpu_pytorch_roi_align_param_t;
+
+typedef struct cpu_distribute_fpn_proposals_roi_align_concat_param {
+    cpu_distribute_fpn_proposals_param_t dfp;
+    cpu_pytorch_roi_align_param_t ra[4];
+} cpu_distribute_fpn_proposals_roi_align_concat_param_t;
+
+typedef struct cpu_tensorflow_nms_v5_param {
+    float iou_threshold;
+    float score_threshold;
+    float soft_nms_sigma;
+    bool pad_to_max_output_size;
+    int max_output_size;
+} cpu_tensorflow_nms_v5_param_t;
 
 //} /* namespace bmcpu */
 #endif /* _CPU_COMMON_H_ */

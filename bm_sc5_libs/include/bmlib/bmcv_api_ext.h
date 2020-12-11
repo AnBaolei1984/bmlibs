@@ -111,11 +111,6 @@ typedef struct bmcv_rect {
     int crop_h;
 } bmcv_rect_t;
 
-typedef struct bmcv_dst_crop_attr_s {
-    int dst_crop_w;
-    int dst_crop_h;
-} bmcv_dst_crop_attr_t;
-
 typedef struct bmcv_copy_to_atrr_s {
     int           start_x;
     int           start_y;
@@ -126,10 +121,10 @@ typedef struct bmcv_copy_to_atrr_s {
 } bmcv_copy_to_atrr_t;
 
 typedef struct bmcv_padding_atrr_s {
-    unsigned int            dst_crop_stx;
-    unsigned int            dst_crop_sty;
-    unsigned int            dst_crop_w;
-    unsigned int            dst_crop_h;
+    unsigned int  dst_crop_stx;
+    unsigned int  dst_crop_sty;
+    unsigned int  dst_crop_w;
+    unsigned int  dst_crop_h;
     unsigned char padding_r;
     unsigned char padding_g;
     unsigned char padding_b;
@@ -254,12 +249,16 @@ bm_status_t bm_image_get_format_info(bm_image *            image,
                                      bm_image_format_info *info);
 
 bm_status_t bm_image_alloc_dev_mem(bm_image image, int heap_id = BMCV_HEAP_ANY);
+bm_status_t bm_image_alloc_dev_mem_heap_mask(bm_image image, int heap_mask);
 bm_status_t bm_image_get_byte_size(bm_image image, int *size);
 bm_status_t bm_image_get_device_mem(bm_image image, bm_device_mem_t *mem);
 
 bm_status_t bm_image_alloc_contiguous_mem(int       image_num,
                                           bm_image *images,
                                           int       heap_id = BMCV_HEAP_ANY);
+bm_status_t bm_image_alloc_contiguous_mem_heap_mask(int       image_num,
+                                                    bm_image *images,
+                                                    int       heap_mask);
 bm_status_t bm_image_free_contiguous_mem(int image_num, bm_image *images);
 bm_status_t bm_image_attach_contiguous_mem(int             image_num,
                                            bm_image *      images,
@@ -519,7 +518,36 @@ bm_status_t bmcv_base64_dec(
 
 bm_status_t bmcv_debug_savedata(bm_image image, const char *name);
 
+bm_status_t bmcv_image_transpose(bm_handle_t handle,
+                                 bm_image input,
+                                 bm_image output);
+
+bm_status_t bmcv_matmul(
+        bm_handle_t      handle,
+        int              M,
+        int              N,
+        int              K,
+        bm_device_mem_t  A,
+        bm_device_mem_t  B,
+        bm_device_mem_t  C,
+        int              A_sign,  // 1: signed 0: unsigned
+        int              B_sign,
+        int              rshift_bit,
+        bool             is_C_16bit,  // else 8bit
+        bool             is_B_trans);
+
 #ifndef USING_CMODEL
+bm_status_t bmcv_image_vpp_basic(bm_handle_t           handle,
+                                 int                   in_img_num,
+                                 bm_image*             input,
+                                 bm_image*             output,
+                                 int*                  crop_num_vec = NULL,
+                                 bmcv_rect_t*          crop_rect = NULL,
+                                 bmcv_padding_atrr_t*  padding_attr = NULL,
+                                 bmcv_resize_algorithm algorithm = BMCV_INTER_LINEAR,
+                                 csc_type_t            csc_type = CSC_MAX_ENUM,
+                                 csc_matrix_t*         matrix = NULL);
+
 bm_status_t bmcv_image_vpp_convert(
     bm_handle_t           handle,
     int                   output_num,
