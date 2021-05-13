@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+namespace bmcompiler {
+
 /**
  * \brief Add a Reorg layer to BMCompiler.
  *
@@ -343,7 +345,7 @@ void add_active_layer_fix8b(
  * \param output_name - The name of the output tensor.
  * \param layer_name - The name of the layer in the network model.
  * \param weight - The pointer to the weight data.
- * \param bias - The pointer to the bias data.
+ * \param bias - The pointer to the bias data. Note that bias data type is fix16b.
  * \param kh - The height of the kernel.
  * \param kw - The width of the kernel.
  * \param groups - The number of groups for group convolution.
@@ -353,10 +355,10 @@ void add_active_layer_fix8b(
  * \param dh - The dilation parameter in height (vertical) direction.
  * \param dw - The dilation parameter in width (horizontal) direction.
  * \param have_bias - Whether or not have bias (1 for True, 0 for False).
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
- * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
- * \param weight_sign - The sign of the weight tensor (0 for unsigned, 1 for signed).
- * \param bias_sign - The sign of the bias tensor (0 for unsigned, 1 for signed).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param out_sign - The sign of the output tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param weight_sign - The sign of the weight tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param bias_sign - The sign of the bias tensor (0 for unsigned fix16b, 1 for signed fix16b).
  * \param rshift_num - The right-shifting size (in bits) of the layer.
  * \param use_winograd - Whether or not use winograd algorithm.
  */
@@ -437,6 +439,42 @@ void add_conv_layer_fix8b_v2(
     bool    use_winograd
  );
 
+void add_conv3d_layer_fix8b(
+    void*         p_bmcpl,
+    const int    *input_shape,
+    int           input_shape_dim,
+    const char   *input_name,
+    const int    *output_shape,
+    int           output_shape_dim,
+    const char   *output_name,
+    const char   *layer_name,
+    const float  *weight,
+    const float  *bias,
+    int           kt,
+    int           kh,
+    int           kw,
+    int           groups,
+    int           pad_t,
+    int           pad_t_after,
+    int           pad_h,
+    int           pad_h_after,
+    int           pad_w,
+    int           pad_w_after,
+    int           stride_t,
+    int           stride_h,
+    int           stride_w,
+    int           dt,
+    int           dh,
+    int           dw,
+    int           have_bias,
+    // fix8b-specific parameters:
+    int           in_sign,
+    int           out_sign,
+    int           weight_sign,
+    int           bias_sign,
+    int           rshift_num
+ );
+
 /**
  * \brief Add a Deconvolution layer to BMCompiler.
  *
@@ -449,7 +487,7 @@ void add_conv_layer_fix8b_v2(
  * \param output_name - The name of the output tensor.
  * \param layer_name - The name of the layer in the network model.
  * \param weight - The pointer to the weight data.
- * \param bias - The pointer to the bias data.
+ * \param bias - The pointer to the bias data. Note that bias data type is fix16b.
  * \param kh - The height of the kernel.
  * \param kw - The width of the kernel.
  * \param groups - The number of groups for group convolution.
@@ -459,10 +497,10 @@ void add_conv_layer_fix8b_v2(
  * \param dh - The dilation parameter in height (vertical) direction.
  * \param dw - The dilation parameter in width (horizontal) direction.
  * \param have_bias - Whether or not have bias (1 for True, 0 for False).
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
- * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
- * \param weight_sign - The sign of the weight tensor (0 for unsigned, 1 for signed).
- * \param bias_sign - The sign of the bias tensor (0 for unsigned, 1 for signed).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param out_sign - The sign of the output tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param weight_sign - The sign of the weight tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param bias_sign - The sign of the bias tensor (0 for unsigned fix16b, 1 for signed fix16b).
  * \param rshift_num - The right-shifting size (in bits) of the layer.
  */
 void add_deconv_layer_fix8b(
@@ -522,6 +560,24 @@ void add_crop_layer_fix8b(
   );
 
 /**
+ * \brief Add a Crop layer to BMCompiler, version 2, adding a mask parameter.
+ *
+ * \param crop_mask - if bit0=1, it means that 0-dim will not be cropped; The same logic applies for other dimensions.
+ */
+void add_crop_layer_fix8b_v2(
+    void*   p_bmcpl,
+    int*    input_shape,
+    int     input_shape_dim,
+    char*   input_name,
+    char*   shape_name,
+    int*    output_shape,
+    int     output_shape_dim,
+    char*   output_name,
+    int*    offsets,
+    int     data_sign,
+    unsigned int crop_mask);
+
+/**
  * \brief Add a PSROIPooling layer to BMCompiler.
  *
  * \param p_bmcpl - Handle to a BMCompiler instance, which is created by \ref create_bmcompiler() or \ref create_bmcompiler_dir().
@@ -574,7 +630,7 @@ void add_psroipooling_layer_fix8b(
  * \param output_shape_dim - The rank of the output tensor.
  * \param output_name - The name of the output tensor.
  * \param pooled_h - The pooled_h parameter of the layer.
- * \param pooled_w - The polled_w parameter of the layer.
+ * \param pooled_w - The pooled_w parameter of the layer.
  * \param spatial_scale - The spatial_scale parameter of the layer.
  * \param roi_nums - The roi_nums parameter of the layer.
  * \param data_sign - The sign of the 1st intput tensor (0 for unsigned, 1 for signed).
@@ -601,8 +657,8 @@ void add_roipooling_layer_fix8b(
  * \brief Add a RPN layer to BMCompiler.
  *
  * \param p_bmcpl - Handle to a BMCompiler instance, which is created by \ref create_bmcompiler() or \ref create_bmcompiler_dir().
- * \param input_shape - The shape of the 1st input tensor, which is an array of integers.
- * \param input_shape_dim - The size of the 1st input shape array, aka the rank of the input tensor.
+ * \param input_shape - The shape of the 1st input tensor.
+ * \param input_shape_dim - The rank of the input tensor.
  * \param input_name - The name of the 1st input tensor.
  * \param input_shape1 - The shape of the 2nd input tensor.
  * \param input_shape_dim1 - The rank of the 2nd input tensor.
@@ -613,15 +669,32 @@ void add_roipooling_layer_fix8b(
  * \param output_shape - The shape of the output tensor.
  * \param output_shape_dim - The rank of the output tensor.
  * \param output_name - The name of the output tensor.
- * \param feat_stride_ - The feature stride parameter of the layer.
- * \param base_size_ - The base size parameter of the layer.
- * \param min_size_ - The box minimum size parameter of the layer.
- * \param pre_nms_topN_ - The pre-NMS-top-N parameter of the layer.
- * \param post_nms_topN_ - The post-NMS-top-N parameter of the layer.
- * \param nms_thresh_ - The NMS threshold parameter of the layer.
- * \param score_thresh_ - The score threshold parameter of the layer.
- * \param in_sign - The sign of the 1st intput tensor (0 for unsigned, 1 for signed).
- * \param scale_val - The scale value parameter of the layer.
+ * \param feat_stride_ - Each pixel in the feature map (of the backbone network for RPN) represents an area of size [feat_stride_, feat_stride_] from the standard input image.
+ * \param base_size_ - The side length (in pixels within the original input image) of the base square anchorbox.
+ * \param min_size_ - The minimum side length (in pixels within the original input image) of any anchorbox.
+ * \param pre_nms_topN_ - Sort anchorboxes according to their foreground scores, and keep `pre_nms_topN_` of them, before NMS.
+ * \param post_nms_topN_ - After NMS, sort anchorboxes again, and keep `post_nms_topN_` of them.
+ * \param nms_thresh_ - The IoU threshold used in NMS for anchorboxes.
+ * \param score_thresh_ - The foreground score threshold for filtering anchorboxes, i.e., anchroboxes with foreground scores lower than the threshold will be discarded.
+ * \param in_sign - The sign of the 2nd intput tensor (0 for unsigned, 1 for signed).
+ * \param scale_val - The scale value for converting the 2nd input tensor from fix8b to FP32.
+ *
+ * \note
+ * This layer has 3 inputs (only the 2nd input is fix8b, the other two inputs are FP32) and 1 output (of FP32):
+ * 1: rpn_cls_prob: FP32
+ * 2: rpn_bbox_pred: fix8b. To convert it to FP32, each element will be multiplied by `scale_val` parameter.
+ * 3: im_info: FP32
+ *
+ * The processing of the layer is as below:
+ * 1. Generate all anchorboxes, assuming that the number of generated anchorboxes match the 1st and 2nd input tensors.
+ * 2. Update anchorbox positions using the 2nd input tensor (it should be already converted to FP32).
+ * 3. Filter anchorboxes:
+ *    - remove anchorboxes whose size are too small;
+ *    - clip anchorboxes which are outside the input image;
+ *    - remove anchorboxes whose foreground score is less than `score_thresh_`
+ * 4. Sort anchorboxes according to their foreground scores, then keep the 1st `pre_nms_topn` anchorboxes
+ * 5. NMS the anchorboxes using `nms_thresh` parameter
+ * 6. Output the 1st `post_nms_topn` anchroboxes
  */
 void add_rpnproposal_layer_fix8b(
     void*   p_bmcpl,
@@ -664,7 +737,7 @@ void add_rpnproposal_layer_fix8b(
  * \param stride_h - The stride parameter in height (vertical) direction.
  * \param stride_w - The stride parameter in width (horizontal) direction.
  * \param is_avg_pooling - Whether or not use average pooling method (1 for True, 0 for False).
- * \param avg_polling_mode - Whether or not use average pooling mode (1 for True, 0 for False).
+ * \param avg_pooling_mode - Whether or not use average pooling mode (1 for True, 0 for False).
  * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
  * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
  * \param is_global_pooling - Whether or not use global pooling method (1 for True, 0 for False).
@@ -696,6 +769,38 @@ void add_pooling_layer_fix8b(
     int     is_global_pooling,
     int     out_ceil_mode
   );
+
+void add_pooling3d_layer_fix8b(
+    void*              p_bmcpl,
+    const int*         input_shape,
+    int                input_shape_dim,
+    const char*        input_name,
+    int                output_number,
+    const int* const*  output_shape,
+    const int*         output_shape_dim,
+    const char* const* output_name,
+    int                kt,
+    int                kh,
+    int                kw,
+    int                front_pad_t,
+    int                back_pad_t,
+    int                up_pad_h,
+    int                down_pad_h,
+    int                left_pad_w,
+    int                right_pad_w,
+    int                stride_t,
+    int                stride_h,
+    int                stride_w,
+    int                is_avg_pooling,
+    int                avg_pooling_mode,
+    int                is_global_pooling,
+    int                out_ceil_mode,
+    const char*        layer_name,
+    const float*       coeff_mask,
+    // fix8b-specific parameters:
+    int                in_sign,
+    int                out_sign
+ );
 
 /**
  * \brief Add a PoolingTF (TensorFlow Pooling) layer to BMCompiler.
@@ -826,7 +931,11 @@ void add_upsamplemask_layer_fix8b(
   );
 
 /**
- * \brief Add a FC (aka InnerProduct) layer to BMCompiler.
+ * \brief Add a FC (aka InnerProduct) layer to BMCompiler: output = input x weight + bias, where
+ * - input shape is [M, K], M is batch_size, K is num_input_neuron;
+ * - weight shape is [K, N], N is num_output_neuron;
+ * - bias shape is [1, N];
+ * - output shape is [M, N];
  *
  * \param p_bmcpl - Handle to a BMCompiler instance, which is created by \ref create_bmcompiler() or \ref create_bmcompiler_dir().
  * \param input_shape - The shape of the input tensor.
@@ -836,16 +945,16 @@ void add_upsamplemask_layer_fix8b(
  * \param output_shape_dim - The rank of the output tensor.
  * \param output_name - The name of the output tensor.
  * \param layer_name - The name of the layer in the network model.
- * \param num_input_neuron - The number of elements in the input tensors, after lumping according to the layer parameter \ref axis.
- * \param num_output_neuron - The num_output parameter of the layer.
+ * \param num_input_neuron - K, the number of input neurons of the layer, after lumping according to the layer parameter \ref axis.
+ * \param num_output_neuron - N, the number of output neurons of the layer.
  * \param weight - The weight data pointer of the layer.
- * \param bias - The bias data pointer of the layer.
+ * \param bias - The bias data pointer of the layer. Note that bias data type is fix16b.
  * \param have_bias - Whether or not the layer uses bias (0 for False, 1 for True).
- * \param weight_col_is_in_neuron_num - Whether the weight column number is the input tensor number or not (1 for True, 0 for False).
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
- * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
- * \param weight_sign - The sign of the weight tensor (0 for unsigned, 1 for signed).
- * \param bias_sign - The sign of the bias tensor (0 for unsigned, 1 for signed).
+ * \param weight_col_is_in_neuron_num - If 0, weight shape is [K, N]; Otherwise, weight shape is [N, K] (i.e., Caffe default).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param out_sign - The sign of the output tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param weight_sign - The sign of the weight tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param bias_sign - The sign of the bias tensor (0 for unsigned fix16b, 1 for signed fix16b).
  * \param rshift_num - The right-shifting size (in bits) of the layer.
  */
 void add_fc_layer_fix8b(
@@ -882,12 +991,17 @@ void add_fc_layer_fix8b(
  * \param output_name - The name of the output tensor.
  * \param layer_name - The name of the layer in the network model.
  * \param alpha - The data pointer to alpha (scale).
- * \param beta - The data pointer to beta (bias). y = alpha * x_norm + beta.
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
- * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
- * \param alpha_sign - The sign of alpha (0 for unsigned, 1 for signed).
- * \param beta_sign - The sign of beta (0 for unsigned, 1 for signed).
+ * \param beta - The data pointer to beta (bias). y = alpha * x_norm + beta. Note that beta (bias) data type is fix16b.
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param out_sign - The sign of the output tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param alpha_sign - The sign of alpha (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param beta_sign - The sign of beta (0 for unsigned fix16b, 1 for signed fix16b).
  * \param rshift_num - The right-shifting size (in bits) of the layer.
+ *
+ * \note
+ * The BatchNorm layer is finally converted to `y=(ax+b)>>shift` after quantization, which can be
+ * treated as Scale operation . So for fix8b BatchNorm layers, it's recommended to call scale
+ * layer API, i.e., add_scale_layer_fix8b() or add_scale_layer_fix8b_v2(), instead of this one.
  */
 void add_batchnorm_layer_fix8b(
     void*   p_bmcpl,
@@ -1369,9 +1483,9 @@ void add_shufflechannel_layer_fix8b(
  * \param layer_name - The name of the layer in the network model.
  * \param num_output_neuron - Must be the number of channels (input_shape[1]) of the input tensor.
  * \param bias - The pointer to the bias tensor's data.
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
- * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
- * \param bias_sign - The sign of the bias tensor (0 for unsigned, 1 for signed).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param out_sign - The sign of the output tensor (0 for unsigned fix8b, 1 for signed fix8b).
+ * \param bias_sign - The sign of the bias tensor (0 for unsigned fix16b, 1 for signed fix16b).
  * \param scale - The scale factor of the layer.
  * \param rshift - The right-shifting size (in bits) of the layer.
  */
@@ -1436,7 +1550,7 @@ void add_stride_slice_layer_fix8b(
   );
 
 /**
- * \brief Add a StridedSlice (of TensorFlow) layer to BMCompiler.
+ * \brief Add a pad layer to BMCompiler.
  *
  * \param p_bmcpl - Handle to a BMCompiler instance, which is created by \ref create_bmcompiler() or \ref create_bmcompiler_dir().
  * \param input_shape - The shape of the input tensor.
@@ -1521,7 +1635,7 @@ void add_const_binary_layer_fix8b(
  * \param input_dim - The rank of the two input tensors.
  * \param output_name - The name of the output tensor.
  * \param binary_op - The operation code of the layer (check \ref BmBinaryType).
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b, 2 for signed fix16b).
  * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
  * \param scale - The scale factors of the input tensors.
  * \param rshift_num - The right-shifting sizes (in bits) of the input tensors.
@@ -1599,7 +1713,7 @@ void add_eltwise_binary_layer_fix8b_ex(
  * \param B_data - The pointer to the 2nd input tensor's data.
  * \param output_name - The name of the output tensor.
  * \param binary_op - The operation code of the layer (check \ref BmBinaryType).
- * \param in_sign - The sign of the input tensor (0 for unsigned, 1 for signed).
+ * \param in_sign - The sign of the input tensor (0 for unsigned fix8b, 1 for signed fix8b, 2 for signed fix16b).
  * \param out_sign - The sign of the output tensor (0 for unsigned, 1 for signed).
  * \param scale - The scale factors of the input tensors.
  * \param rshift_num - The right-shifting sizes (in bits) of the input tensors.
@@ -2225,6 +2339,7 @@ void add_arith_shift_layer_fix8b(
     int                shiftType,
     int                shift_num,
     int                shift_mode,
+    int                shift_is_const,
     int                in_type,
     int                out_type
   );
@@ -2256,6 +2371,7 @@ void add_slice_like_layer_fix8b(
     const int*          input_sign
   );
 
+} // namespace bmcompiler
 
 #ifdef __cplusplus
 }

@@ -6,6 +6,8 @@
 
 typedef unsigned long long u64;
 
+namespace bmcompiler {
+
 typedef enum {
   DTYPE_FP32 = 0,
   DTYPE_FP16 = 1,
@@ -86,5 +88,7 @@ typedef struct {
   int zero_point_num;
   BmIntArray* zero_point;
 } BmQuantizeInfo;
+
+} // namespace bmcompiler
 
 #endif

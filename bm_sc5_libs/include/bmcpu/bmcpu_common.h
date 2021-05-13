@@ -52,6 +52,11 @@ typedef enum {
     CPU_DISTRIBUTE_FPN_PROPOSALS  = 36, /* CPU DISTRIBUTE FPN PROPOSALS */
     CPU_DISTRIBUTE_FPN_PROPOSALS_ROI_ALIGN_CONCAT = 37,
     CPU_PYTORCH_ROI_ALIGN         = 38, /* CPU PYTORCH ROI ALIGN */
+    CPU_AFFINE_GRID_GENERATOR     = 39, /* CPU AFFINE GRID GENERATOR */
+    CPU_GRID_SAMPLER              = 40, /* CPU GRID SAMPLER */
+    CPU_AFFINE_GRID_SAMPLER       = 41, /* CPU AFFINE GRID SAMPLER */
+    CPU_RANDOM_UNIFORM_INT        = 42, /* CPU RANDOM UNIFORM INT */
+    CPU_TOPK_ASCENDING            = 43, /* CPU TOPK BY ASCENDING ORDER */
     CPU_LAYER_NUM,
     CPU_LAYER_UNKNOW = CPU_LAYER_NUM,
     CPU_DEBUG                     = 88888, /* CPU DEBUG by dump tensor*/
@@ -181,6 +186,7 @@ typedef struct cpu_where_squeeze_gather {
 typedef struct cpu_nms {
     float iou_threshold;
     float score_threshold;
+    int max_output_size;
 } cpu_nms_t;
 
 typedef struct cpu_argsort_param {
@@ -309,6 +315,12 @@ typedef struct cpu_random_uniform_param {
     long long seed;
 } cpu_random_uniform_param_t;
 
+typedef struct cpu_random_uniform_int_param {
+    int dim;
+    int shape[8];
+    long long seed;
+} cpu_random_uniform_int_param_t;
+
 typedef struct cpu_generate_proposals_param {
     float spatial_scale;
     int rpn_pre_nms_topN;
@@ -382,6 +394,24 @@ typedef struct cpu_tensorflow_nms_v5_param {
     bool pad_to_max_output_size;
     int max_output_size;
 } cpu_tensorflow_nms_v5_param_t;
+
+typedef struct cpu_affine_grid_generator_param {
+    bool align_corners;
+    int N;
+    int H;
+    int W;
+} cpu_affine_grid_generator_param_t;
+
+typedef struct cpu_grid_sampler_param {
+    int mode;
+    int padding_mode;
+    bool align_corners;
+} cpu_grid_sampler_param_t;
+
+typedef struct cpu_affine_grid_sampler_param {
+    cpu_affine_grid_generator_param_t generator;
+    cpu_grid_sampler_param_t sampler;
+} cpu_affine_grid_sampler_param_t;
 
 //} /* namespace bmcpu */
 #endif /* _CPU_COMMON_H_ */

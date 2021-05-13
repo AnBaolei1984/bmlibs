@@ -19,11 +19,11 @@ typedef struct {
 } __attribute__((packed)) face_rect_t;
 
 #define MIN_PROPOSAL_NUM (1)
-#define MAX_PROPOSAL_NUM (8192)
+#define MAX_PROPOSAL_NUM (65535)
 typedef struct nms_proposal {
     int          size;
-    int          capacity;
     face_rect_t  face_rect[MAX_PROPOSAL_NUM];
+    int          capacity;
     face_rect_t *begin;
     face_rect_t *end;
 } __attribute__((packed)) nms_proposal_t;
@@ -79,6 +79,7 @@ typedef enum bm_image_format_ext_ {
     FORMAT_BGRP_SEPARATE,
     FORMAT_GRAY,
     FORMAT_COMPRESSED,
+    FORMAT_HSV_PLANAR,
 } bm_image_format_ext;
 
 typedef enum bmcv_resize_algorithm_ {
@@ -169,6 +170,15 @@ typedef enum csc_type {
     CSC_USER_DEFINED_MATRIX = 1000,
     CSC_MAX_ENUM
 } csc_type_t;
+
+typedef enum {
+    BM_THRESH_BINARY = 0,
+    BM_THRESH_BINARY_INV,
+    BM_THRESH_TRUNC,
+    BM_THRESH_TOZERO,
+    BM_THRESH_TOZERO_INV,
+    BM_THRESH_TYPE_MAX
+} bm_thresh_type_t;
 
 const char *bm_get_bmcv_version();
 
@@ -273,6 +283,11 @@ bm_status_t bmcv_image_yuv2bgr_ext(bm_handle_t handle,
                                    int         image_num,
                                    bm_image *  input,
                                    bm_image *  output);
+
+bm_status_t bmcv_image_yuv2hsv(bm_handle_t handle,
+                               bmcv_rect_t rect,
+                               bm_image    input,
+                               bm_image    output);
 
 bm_status_t bmcv_image_storage_convert(bm_handle_t handle,
                                        int         image_num,
@@ -480,6 +495,37 @@ bm_status_t bmcv_sort(
         int             order,
         bool            index_enable,
         bool            auto_index);
+/**
+ * @brief: calculate topk for each db, return BM_SUCCESS if succeed.
+ * @param handle           [in]: the device handle.
+ * @param src_data_addr    [in]: device addr information of input_data.
+ * @param src_index_addr   [in]: device addr information of input_index, set it if src_index_valid.
+ * @param dst_data_addr    [out]: device addr information of output_data
+ * @param dst_index_addr   [in]: device addr information of output_index.
+ * @param buffer_addr      [in]: device addr information of buffer.
+ *        if (max(per_batch_cnt) > 200000) buffer_size = ceil(max(per_per_batch_cnt)/4000000) * 3*sizeof(float)*(k>10000? 2*k : 10000)
+ *        else                             buffer_size = (batch * k + max_cnt) * sizeof(float) * 2
+ * @param src_index_valid  [in]: if use src_index, otherwise gen index auto.
+ * @param k                [in]: k value 
+ * @param batch            [in]: batch numeber
+ * @param per_batch_cnt    [in]: data_number of per_batch
+ * @param src_batch_stride [in]: distance between two batches
+ * @param descending       [in]: descending or ascending.
+ */
+bm_status_t bmcv_batch_topk(
+        bm_handle_t     handle,
+        bm_device_mem_t src_data_addr,
+        bm_device_mem_t src_index_addr,
+        bm_device_mem_t dst_data_addr,
+        bm_device_mem_t dst_index_addr,
+        bm_device_mem_t buffer_addr,
+        bool            src_index_valid,
+        int             k,
+        int             batch,
+        int *           per_batch_cnt,
+        bool            same_batch_cnt,
+        int             src_batch_stride,
+        bool            descending = true);
 
 bm_status_t bmcv_feature_match_normalized(
         bm_handle_t     handle,
@@ -533,8 +579,188 @@ bm_status_t bmcv_matmul(
         int              A_sign,  // 1: signed 0: unsigned
         int              B_sign,
         int              rshift_bit,
-        bool             is_C_16bit,  // else 8bit
-        bool             is_B_trans);
+        int              result_type,  // 0:8bit 1:int16 2:fp32
+        bool             is_B_trans,
+        float            alpha = 1,
+        float            beta = 0);
+
+bm_status_t bmcv_image_sobel(
+        bm_handle_t handle,
+        bm_image input,
+        bm_image output,
+        int dx,
+        int dy,
+        int ksize = 3,
+        float scale = 1,
+        float delta = 0);
+
+bm_status_t bmcv_calc_hist(bm_handle_t handle,
+                           bm_device_mem_t input,
+                           bm_device_mem_t output,
+                           int C,
+                           int H,
+                           int W,
+                           const int *channels,
+                           int dims,
+                           const int *histSizes,
+                           const float *ranges,
+                           int inputDtype);
+
+bm_status_t bmcv_calc_hist_with_weight(bm_handle_t handle,
+                                       bm_device_mem_t input,
+                                       bm_device_mem_t output,
+                                       const float *weight,
+                                       int C,
+                                       int H,
+                                       int W,
+                                       const int *channels,
+                                       int dims,
+                                       const int *histSizes,
+                                       const float *ranges,
+                                       int inputDtype);
+
+bm_status_t bmcv_distance(bm_handle_t handle,
+                          bm_device_mem_t input,
+                          bm_device_mem_t output,
+                          int dim,
+                          const float *pnt,
+                          int len);
+
+bm_status_t bmcv_fft_1d_create_plan(bm_handle_t handle,
+                                    int batch,
+                                    int len,
+                                    bool forward,
+                                    void *&plan);
+
+bm_status_t bmcv_fft_2d_create_plan(bm_handle_t handle,
+                                    int M,
+                                    int N,
+                                    bool forward,
+                                    void *&plan);
+
+bm_status_t bmcv_fft_execute(bm_handle_t handle,
+                             bm_device_mem_t inputReal,
+                             bm_device_mem_t inputImag,
+                             bm_device_mem_t outputReal,
+                             bm_device_mem_t outputImag,
+                             const void *plan);
+
+bm_status_t bmcv_fft_execute_real_input(
+                             bm_handle_t handle,
+                             bm_device_mem_t inputReal,
+                             bm_device_mem_t outputReal,
+                             bm_device_mem_t outputImag,
+                             const void *plan);
+
+void bmcv_fft_destroy_plan(bm_handle_t handle, void *plan);
+
+// mode = 0 for min only, 1 for max only, 2 for both
+bm_status_t bmcv_min_max(bm_handle_t handle,
+                         bm_device_mem_t input,
+                         float *minVal,
+                         float *maxVal,
+                         int len);
+
+bm_status_t bmcv_cmulp(bm_handle_t handle,
+                       bm_device_mem_t inputReal,
+                       bm_device_mem_t inputImag,
+                       bm_device_mem_t pointReal,
+                       bm_device_mem_t pointImag,
+                       bm_device_mem_t outputReal,
+                       bm_device_mem_t outputImag,
+                       int batch,
+                       int len);
+
+bm_status_t bmcv_image_add_weighted(
+        bm_handle_t handle,
+        bm_image input1,
+        float alpha,
+        bm_image input2,
+        float beta,
+        float gamma,
+        bm_image output);
+
+bm_status_t bmcv_image_absdiff(
+        bm_handle_t handle,
+        bm_image input1,
+        bm_image input2,
+        bm_image output);
+
+bm_status_t bmcv_image_threshold(
+        bm_handle_t handle,
+        bm_image input,
+        bm_image output,
+        unsigned char thresh,
+        unsigned char max_value,
+        bm_thresh_type_t type);
+
+bm_status_t bmcv_image_gaussian_blur(
+        bm_handle_t handle,
+        bm_image input,
+        bm_image output,
+        int kw,
+        int kh,
+        float sigmaX,
+        float sigmaY = 0);
+
+bm_status_t bmcv_image_canny(
+        bm_handle_t handle,
+        bm_image input,
+        bm_image output,
+        float threshold1,
+        float threshold2,
+        int aperture_size = 3,
+        bool l2gradient = false);
+
+/**
+ * @brief bmcv_dct_coeff
+ * @param handle
+ * @param H
+ * @param W
+ * @param hcoeff_output: HxH
+ * @param wcoeff_output: WxW
+ * @param is_inversed: 0-dct, 1-idct
+ * @return
+ */
+bm_status_t bmcv_dct_coeff(
+        bm_handle_t handle,
+        int H,
+        int W,
+        bm_device_mem_t hcoeff_output,
+        bm_device_mem_t wcoeff_output,
+        bool is_inversed
+        );
+
+/**
+ * @brief bmcv_image_dct_with_coeff which can reuse dct coeff for optimization, output=hcoeff[HxH]*input[HxW]*wcoeff[WxW]
+ * @param handle
+ * @param input: image
+ * @param hcoeff: output from bmcv_dct_coeff
+ * @param wcoeff: output from bmcv_dct_coeff
+ * @param output: dct output
+ * @return
+ */
+bm_status_t bmcv_image_dct_with_coeff(
+        bm_handle_t handle,
+        bm_image input,
+        bm_device_mem_t hcoeff,
+        bm_device_mem_t wcoeff,
+        bm_image output
+        );
+
+/**
+ * @brief bmcv_image_dct: recalculate dct coeff every time, that will cost more time
+ * @param handle
+ * @param input
+ * @param output
+ * @return
+ */
+bm_status_t bmcv_image_dct(
+        bm_handle_t handle,
+        bm_image input,
+        bm_image output,
+        bool is_inversed
+        );
 
 #ifndef USING_CMODEL
 bm_status_t bmcv_image_vpp_basic(bm_handle_t           handle,

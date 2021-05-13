@@ -1,6 +1,7 @@
 #ifndef BMLIB_UTILS_H
 #define BMLIB_UTILS_H
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * Debug definitions for user app only
@@ -67,6 +68,19 @@ int conv_coeff_storage_convert(
     unsigned int kh,
     unsigned int kw,
     unsigned int npu_num);
+
+static inline int get_env_int_value(const char* name, int default_value){
+    const char* value_str = getenv(name);
+    if(!value_str) return default_value;
+    return atoi(value_str);
+}
+
+static inline int get_env_bool_value(const char* name, int default_value){
+    const char* value_str = getenv(name);
+    if(!value_str) return default_value;
+    return strlen(value_str) && (value_str[0] == 'T' || value_str[0] == 't'
+           || atoi(value_str) != 0);
+}
 
 
 #ifdef __cplusplus

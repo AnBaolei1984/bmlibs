@@ -1,6 +1,8 @@
 #ifndef BMCOMPILER_OP_CODE_H
 #define BMCOMPILER_OP_CODE_H
 
+namespace bmcompiler {
+
 typedef enum {
   REDUCE_MEAN = 0,
   REDUCE_SUM = 1,
@@ -47,8 +49,20 @@ typedef enum {
   ACTIVE_COS       = 14,
   ACTIVE_IS_FINITE = 15,
   ACTIVE_MISH      = 16,
-  ACTIVE_SWISH     = 17,  // only for fix8b currently
-  ACTIVE_HSWISH    = 18   // only for fix8b currently
+  ACTIVE_SWISH     = 17,
+  ACTIVE_HSWISH    = 18,
+  ACTIVE_SILU      = 19
 } BmActiveType;
+
+typedef enum {
+  STRIDE_ADD = 0,
+  STRIDE_SUB = 1,
+  STRIDE_MUL = 2,
+  STRIDE_DIV = 3,
+  STRIDE_MAX = 4,
+  STRIDE_CPY = 5,
+} BmStrideCalculateType;
+
+} // namespace bmcompiler
 
 #endif

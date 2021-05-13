@@ -115,6 +115,16 @@ typedef enum {
     BINARY_FUNC_CNT
 } BINARY_FUNC;
 
+typedef enum {
+    STRIDE_ADD = 0,
+    STRIDE_SUB = 1,
+    STRIDE_MUL = 2,
+    STRIDE_DIV = 3,
+    STRIDE_MAX = 4,
+    STRIDE_CPY = 5,
+    STRIDE_MIN = 10000
+} STRIDE_CALC_OP;
+
 #define TENSOR_MUL 0
 #define TENSOR_MAC 1
 #define TENSOR_ADD 2
@@ -201,22 +211,22 @@ typedef enum {
 #define BM_REDUCE_MIN  3
 #define BM_REDUCE_PROD 4
 
-#define BINARY_ADD 0
-#define BINARY_SUB 1
-#define BINARY_MUL 2
-#define BINARY_DIV 3
-#define BINARY_MAX 4
-#define BINARY_MIN 10000
+#define BM_BINARY_ADD 0
+#define BM_BINARY_SUB 1
+#define BM_BINARY_MUL 2
+#define BM_BINARY_DIV 3
+#define BM_BINARY_MAX 4
+#define BM_BINARY_MIN 10000
 
-#define BINARY_GT 10001
-#define BINARY_GE 10002
-#define BINARY_LT 10003
-#define BINARY_LE 10004
-#define BINARY_EQ 10005
-#define BINARY_NE 10006
-#define BINARY_SQUARED_DIFF 10007
-#define BINARY_FLOOR_MOD 10008
-#define BINARY_FLOOR_DIV 10009
+#define BM_BINARY_GT 10001
+#define BM_BINARY_GE 10002
+#define BM_BINARY_LT 10003
+#define BM_BINARY_LE 10004
+#define BM_BINARY_EQ 10005
+#define BM_BINARY_NE 10006
+#define BM_BINARY_SQUARED_DIFF 10007
+#define BM_BINARY_FLOOR_MOD 10008
+#define BM_BINARY_FLOOR_DIV 10009
 
 #define ACTIVE_ROUND    10  //only for float shape tensor
 #define ACTIVE_CEIL     11  //only for float shape tensor

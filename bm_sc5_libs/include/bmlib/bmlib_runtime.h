@@ -31,10 +31,6 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#if !defined(__x86_64__) && !defined(__aarch64__)
-#error "BM needs 64 - bit to compile"
-#endif
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -1259,6 +1255,240 @@ bm_status_t bm_get_stat(bm_handle_t handle, bm_dev_stat_t *stat);
  */
 
 bm_status_t bm_get_gmem_heap_id(bm_handle_t handle, bm_device_mem_t *pmem, unsigned int *heapid);
+
+/**
+ * @name    bmkernel_load_firmware
+ * @brief   update firmware
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [in]  file saved firmware should be load to tcm
+ * @param [in]  file saved firmware should be load to ddr
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bmkernel_load_firmware(bm_handle_t handle, const char *firmware_tcm,
+                                   const char *firmware_ddr);
+
+/**
+ * @name    bmkernel_launch
+ * @brief   send api to device and launch function
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [in]  api cmd struct pointer
+ * @param [in]  api cmd length
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bmkernel_launch(bm_handle_t handle, const void *args,
+                            unsigned int size);
+
+/**
+ * @name    bmkernel_load_lookup_table
+ * @brief   load lookup table to l2-sram
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]  handle  The device handle
+ * @param [in]  table which loaded to l2-sram
+ * @param [in]  table size
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bmkernel_load_lookup_table(bm_handle_t handle, const void* table, unsigned int size);
+
+/*******************device management api functions ********************************************/
+/**
+ * @name    bm_get_tpu_current
+ * @brief   get tpu current
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]   handle     The device handle
+ * @param [out]  tpuc(mA)   The pointer for tpu current
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_tpu_current(bm_handle_t handle, unsigned int *tpuc);
+
+/**
+ * @name    bm_get_board_max_power
+ * @brief   get board support max power
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  maxp    The pointer for maxp
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_board_max_power(bm_handle_t handle, unsigned int *maxp);
+
+/**
+ * @name    bm_get_board_power
+ * @brief   get board power
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]   handle    The device handle
+ * @param [out]  boardp    The pointer for boardp
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_board_power(bm_handle_t handle, unsigned int *boardp);
+
+/**
+ * @name    bm_get_fan_speed
+ * @brief   get board fan speed
+ * @ingroup bmlib_runtime
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  fan    The pointer for fan speed
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_fan_speed(bm_handle_t handle, unsigned int *fan);
+
+/**
+ * @name    bm_get_ecc_correct_num
+ * @brief   get ecc_correct_num
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  ecc_correct_num
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_ecc_correct_num(bm_handle_t handle, unsigned long *ecc_correct_num);
+
+/**
+ * @name    bm_get_12v_atx
+ * @brief   get atx_12v
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  atx_12v
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_12v_atx(bm_handle_t handle, int *atx_12v);
+
+/**
+ * @name    bm_get_sn
+ * @brief   get sn
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  sn
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_sn(bm_handle_t handle, char *sn);
+
+/**
+ * @name    bm_get_status
+ * @brief   get chip status
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  status
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_status(bm_handle_t handle, int *status);
+
+/**
+ * @name    bm_get_tpu_maxclk
+ * @brief   get tpu_maxclk
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  tpu_maxclk
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_tpu_maxclk(bm_handle_t handle, unsigned int *tpu_maxclk);
+
+/**
+ * @name    bm_get_tpu_minclk
+ * @brief   get tpu_minclk
+ * @ingroup device management api
+ *
+ * @param [in]   handle  The device handle
+ * @param [out]  tpu_minclk
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_tpu_minclk(bm_handle_t handle, unsigned int *tpu_minclk);
+
+/**
+ * @name    bm_get_driver_version
+ * @brief   get driver version
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  driver_version
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_driver_version(bm_handle_t handle, int *driver_version);
+
+/**
+ * @name    bm_get_board_name
+ * @brief   get device board name
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  board_name
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_board_name(bm_handle_t handle, char *name);
+
+/**
+ * @name    bm_get_board_temp
+ * @brief   get board temperature
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  board_temp
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_board_temp(bm_handle_t handle, unsigned int *board_temp);
+
+/**
+ * @name    bm_get_chip_temp
+ * @brief   get chip temperature
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  chip_temp
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_chip_temp(bm_handle_t handle, unsigned int *chip_temp);
+
+/**
+ * @name    bm_get_tpu_power
+ * @brief   get TPU power
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  tpu_power
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_tpu_power(bm_handle_t handle, float *tpu_power);
+
+/**
+ * @name    bm_get_tpu_volt
+ * @brief   get TPU voltage
+ * @ingroup device management api
+ *
+ * @param [in]   handle The device handle
+ * @param [out]  tpu_volt
+ * @retval  BM_SUCCESS  Succeeds.
+ *          Other code  Fails.
+ */
+bm_status_t bm_get_tpu_volt(bm_handle_t handle, unsigned int *tpu_volt);
 
 #if defined(__cplusplus)
 }

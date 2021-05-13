@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 
+namespace bmcompiler {
+
 using std::vector;
 
 typedef struct DataInfo{
@@ -42,7 +44,8 @@ typedef struct BmConvParam {
 typedef struct BmFcParam {
   int has_bias;
   int weight_col_is_in_neruon_num;
-  int mode; //0: LowPrecision, 1: HighPrecisionSymmtric, 2: HighPrecisionAsymmetric
+  int mode; //0: LowPrecision, 1: HighPrecisionSymmtric, 2: HighPrecisionAsymmetric, 3: HighPrecisionSymmetricPerchannel
+  float perlayer_bias;
   BmQuantizeInfo quantize_info;
 } BmFcParam;
 
@@ -113,7 +116,11 @@ void add_relu_layer_unified(
 void add_stride_slice_layer_unified(
     void*   p_bmcpl,
     const   DataInfo inp_data,
+    const   DataInfo start_data,
+    const   DataInfo end_data,
+    const   DataInfo stride_data,
     const   DataInfo out_data,
+    int     input_num,
     int     begin_mask,
     int     end_mask,
     const   int* begin_index,
@@ -174,7 +181,8 @@ void add_tile_layer_unified(
   const DataInfo out_data,
   int            coeff_is_fixed,
   const char     *coeff_name,
-  const int *    tile_coeff
+  const int *    tile_coeff,
+  int            type // 0: tile, 1: repeat
 );
 
 void add_concat_layer_unified(
@@ -291,7 +299,8 @@ void add_elementwise_shift_layer_unified(
     const DataInfo    out_data,
     int               shiftType,
     int               shift_num,
-    int               shift_mode
+    int               shift_mode,
+    int               shift_is_const
 );
 
 void add_squeeze_layer_unified(
@@ -411,6 +420,30 @@ void add_number_like_layer_unified(
   const DataInfo in_data,
   const DataInfo b_data,
   const DataInfo out_data);
+
+void add_binary_shift_layer_unified(
+  void*          p_bmcpl,
+  const DataInfo a_data,
+  const DataInfo b_data,
+  const DataInfo out_data,
+  int            rshift_num,
+  int            binary_op,
+  int            b_is_const,
+  int            b_const_val,
+  int            inversed);
+
+void add_interp_layer_unifined(
+    void* p_bmcpl,
+    const DataInfo in_data,
+    const DataInfo out_data,
+    int pad_bag,
+    int pad_end,
+    int platform,
+    int mode,
+    bool align_corners,
+    bool half_pixel_centers);
+
+} // namespace bmcompiler
 
 #ifdef __cplusplus
 }
